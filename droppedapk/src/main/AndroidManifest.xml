@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:sharedUserId="android.uid.system">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:sharedUserId="android.uid.system"
+    tools:ignore="Deprecated">
 
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
+
+    <!-- Use android:process to run the app in an existing process running as android.uid.system -->
+    <!-- "system" will run as the system_server process with direct access to internal system services via reflection -->
+    <!-- Set a system app with uid 1000 like "com.sec.android.diagmonagent" to run with system_app SE context with access to sdcard and laxer executable permissions -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:process="system"
+        android:process="com.sec.android.diagmonagent"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:extractNativeLibs="true"
         android:supportsRtl="true">
         <activity
             android:name=".MainActivity"

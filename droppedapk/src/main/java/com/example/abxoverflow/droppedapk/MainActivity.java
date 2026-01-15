@@ -2,30 +2,123 @@ package com.example.abxoverflow.droppedapk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Process;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 public class MainActivity extends Activity {
 
+    private static final String TAG = "DroppedAPK";
+
+    private String printStream(InputStream stream, boolean isError) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        String line;
+        StringBuilder output = new StringBuilder();
+        while ((line = reader.readLine()) != null) {
+            output.append(line).append("\n");
+            if (isError) {
+                Log.e(TAG, line);
+            } else {
+                Log.i(TAG, line);
+            }
+        }
+        return output.toString();
+    }
+
+    private void showResultDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // TODO uncomment if frida required
+        // System.loadLibrary("frida-gadget-android");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button btnShizuku = this.findViewById(R.id.btn_start_shizuku);
+        Button btnShell = this.findViewById(R.id.btn_shell);
+
+        btnShizuku.setOnClickListener(v -> {
+            try {
+                ApplicationInfo info = getPackageManager().getApplicationInfo("moe.shizuku.privileged.api", 0);
+                // get directory from apk path
+                String dir = info.sourceDir.substring(0, info.sourceDir.lastIndexOf('/'));
+
+                java.lang.Process process =  Runtime.getRuntime().exec(dir + "/lib/arm64/libshizuku.so");
+                String out = printStream(process.getInputStream(), false);
+                String err = printStream(process.getErrorStream(), true);
+
+                Toast.makeText(MainActivity.this, "Shizuku launched", Toast.LENGTH_SHORT).show();
+            } catch (PackageManager.NameNotFoundException e) {
+                Toast.makeText(MainActivity.this, "Shizuku is NOT installed", Toast.LENGTH_SHORT).show();
+
+            } catch (IOException e) {
+                Toast.makeText(MainActivity.this, "IOException while starting", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Failed to start Shizuku", e);
+            }
+        });
+
+        btnShell.setOnClickListener(v -> {
+            final EditText input = new EditText(this);
+
+            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Run command")
+                    .setPositiveButton("Run", (dialog1, which) -> {
+                        // Prevent dialog from closing automatically
+                        try {
+                            java.lang.Process process = Runtime.getRuntime().exec(input.getText().toString());
+
+                            String out = printStream(process.getInputStream(), false);
+                            String err = printStream(process.getErrorStream(), true);
+
+                            input.setText("");
+
+                            showResultDialog(out + "\n" + err);
+                        } catch (IOException e) {
+                            Toast.makeText(MainActivity.this, "IOException while starting", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Failed to start shell", e);
+
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            showResultDialog(sw.toString());
+                        }
+                    })
+                    .setNegativeButton("Close", null)
+                    .create();
+            dialog.setView(input);
+            dialog.show();
+        });
+
 
         String id = "?";
         try {
