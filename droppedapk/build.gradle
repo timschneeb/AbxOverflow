@@ -16,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.abxoverflow.droppedapk"
+        applicationId "com.example.abxoverflow.droppedapk.system"
         minSdk 31
         targetSdk 33
         versionCode 1
@@ -42,4 +42,6 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.yinyinnie.stetho:stetho:1.0.0'
+    implementation 'com.github.yinyinnie.stetho:stetho-js-rhino:1.0.0'
 }

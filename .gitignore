@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+/droppedapk/release
+/droppedapk/build
+/app/build
+/.idea
