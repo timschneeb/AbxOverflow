@@ -68,23 +68,7 @@ public class MainActivity extends Activity {
         Button btnShell = this.findViewById(R.id.btn_shell);
 
         btnShizuku.setOnClickListener(v -> {
-            try {
-                ApplicationInfo info = getPackageManager().getApplicationInfo("moe.shizuku.privileged.api", 0);
-                // get directory from apk path
-                String dir = info.sourceDir.substring(0, info.sourceDir.lastIndexOf('/'));
-
-                java.lang.Process process =  Runtime.getRuntime().exec(dir + "/lib/arm64/libshizuku.so");
-                String out = printStream(process.getInputStream(), false);
-                String err = printStream(process.getErrorStream(), true);
-
-                Toast.makeText(MainActivity.this, "Shizuku launched", Toast.LENGTH_SHORT).show();
-            } catch (PackageManager.NameNotFoundException e) {
-                Toast.makeText(MainActivity.this, "Shizuku is NOT installed", Toast.LENGTH_SHORT).show();
-
-            } catch (IOException e) {
-                Toast.makeText(MainActivity.this, "IOException while starting", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Failed to start Shizuku", e);
-            }
+            Shizuku.launchAsSystem(MainActivity.this);
         });
 
         btnShell.setOnClickListener(v -> {
