@@ -34,12 +34,39 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
+
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer;
 
 public class MainActivity extends Activity {
 
+    static {
+        collectInstances();
+    }
+
     private static final String TAG = "DroppedAPK";
 
+    @SuppressLint("PrivateApi")
+    private static void collectInstances() {
+        // Get all services
+        try {
+            Class<?> serviceManager = Class.forName("android.os.ServiceManager");
+            for (String serviceName : ((String[]) Objects.requireNonNull(serviceManager.getMethod("listServices").invoke(null)))) {
+                Object serviceObj = serviceManager
+                        .getMethod("getService", String.class)
+                        .invoke(null, serviceName);
+
+                if (serviceObj == null) {
+                    Log.w(TAG, "Service " + serviceName + " is null, skipping");
+                    continue;
+                }
+                ReflectionExplorer.INSTANCE.getInstances().add(serviceObj);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed listing services", e);
+        }
+    }
     private String printStream(InputStream stream, boolean isError) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         String line;
@@ -73,6 +100,7 @@ public class MainActivity extends Activity {
         Mods.runAll();
 
         Button btnShell = this.findViewById(R.id.btn_shell);
+        Button btnInspect = this.findViewById(R.id.btn_inspect);
 
         btnShell.setOnClickListener(v -> {
             final EditText input = new EditText(this);
@@ -106,6 +134,7 @@ public class MainActivity extends Activity {
             dialog.show();
         });
 
+        btnInspect.setOnClickListener(v -> ReflectionExplorer.INSTANCE.launchMainActivity(this));
 
         String id = "?";
         try {

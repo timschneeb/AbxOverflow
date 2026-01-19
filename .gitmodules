@@ -1,0 +1,3 @@
+[submodule "reflection-explorer"]
+	path = reflection-explorer
+	url = git@github.com:timschneeb/ReflectionExplorer.git
