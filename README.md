@@ -1,11 +1,12 @@
 Fork changes:
+
 * branch `main`
-        * Disables Android permission checking system-wide (for hardcoded packages and UIDs)
-        * Simple integrated shell
+   * Disables Android permission checking system-wide (for hardcoded packages and UIDs)
+   * Simple integrated shell
 * branch `shizuku-launcher`
-        * Runs as hidden system app on Samsung devices instead of system-server
-        * Launches [my Shizuku fork (with system user support)](https://github.com/timschneeb/Shizuku-SystemUID) as the system app on start up
-        * Simple integrated shell
+   * Runs as hidden system app on Samsung devices instead of system-server
+   * Launches [my Shizuku fork (with system user support)](https://github.com/timschneeb/Shizuku-SystemUID) as the system app on start up
+   * Simple integrated shell
 __________
 
 ![Screenshot of Android application with title AbxDroppedApk and lots of text describing that it is running within system_server](Screenshot_20231024-164541.png)
