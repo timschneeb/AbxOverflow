@@ -31,6 +31,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import java.util.function.BiFunction;
 import me.timschneeberger.reflectionexplorer.Group;
 import me.timschneeberger.reflectionexplorer.Instance;
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer;
+import me.timschneeberger.reflectionexplorer.utils.ParamNames;
 
 public class MainActivity extends Activity {
 
@@ -51,6 +53,11 @@ public class MainActivity extends Activity {
 
     @SuppressLint("PrivateApi")
     private static void collectInstances() {
+        // DEX package detection fails in the system-server; so we manually add relevant framework JARs
+        ParamNames.INSTANCE.getAdditionalDexSearchPaths().addAll(
+                List.of("/system/framework/services.jar", "/system/framework/framework.jar")
+        );
+
         Group serviceGroup = new Group("Accessible Services", null);
         Group inaccServiceGroup = new Group("Inaccessible Services", null);
 
