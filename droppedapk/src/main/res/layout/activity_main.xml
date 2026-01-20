@@ -7,27 +7,34 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btn_shell"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Shell" />
-
-    <Button
-        android:id="@+id/btn_inspect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Inspect" />
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/app_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            tools:text="Hello World!" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_shell"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Shell" />
+
+            <Button
+                android:id="@+id/btn_inspect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Inspect" />
+
+            <TextView
+                android:id="@+id/app_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                tools:text="Hello World!" />
+
+        </LinearLayout>
     </ScrollView>
 </LinearLayout>
