@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import me.timschneeberger.reflectionexplorer.Group;
+import me.timschneeberger.reflectionexplorer.Instance;
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer;
 
 public class MainActivity extends Activity {
@@ -49,6 +51,9 @@ public class MainActivity extends Activity {
 
     @SuppressLint("PrivateApi")
     private static void collectInstances() {
+        Group serviceGroup = new Group("Accessible Services", null);
+        Group inaccServiceGroup = new Group("Inaccessible Services", null);
+
         // Get all services
         try {
             Class<?> serviceManager = Class.forName("android.os.ServiceManager");
@@ -61,7 +66,12 @@ public class MainActivity extends Activity {
                     Log.w(TAG, "Service " + serviceName + " is null, skipping");
                     continue;
                 }
-                ReflectionExplorer.INSTANCE.getInstances().add(serviceObj);
+
+                if (serviceObj.getClass().getName().equals("android.os.BinderProxy")) {
+                    ReflectionExplorer.INSTANCE.getInstances().add(new Instance(serviceObj, serviceName, inaccServiceGroup));
+                    continue;
+                }
+                ReflectionExplorer.INSTANCE.getInstances().add(new Instance(serviceObj, serviceName, serviceGroup));
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed listing services", e);
