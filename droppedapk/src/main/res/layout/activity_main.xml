@@ -28,6 +28,12 @@
                 android:layout_height="wrap_content"
                 android:text="Inspect" />
 
+            <Button
+                android:id="@+id/btn_internal_dex"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start internal Samsung DEX screen" />
+
             <TextView
                 android:id="@+id/app_text"
                 android:layout_width="wrap_content"

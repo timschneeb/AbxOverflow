@@ -118,6 +118,7 @@ public class MainActivity extends Activity {
 
         Button btnShell = this.findViewById(R.id.btn_shell);
         Button btnInspect = this.findViewById(R.id.btn_inspect);
+        Button btnInternalDex = this.findViewById(R.id.btn_internal_dex);
 
         btnShell.setOnClickListener(v -> {
             final EditText input = new EditText(this);
@@ -152,6 +153,33 @@ public class MainActivity extends Activity {
         });
 
         btnInspect.setOnClickListener(v -> ReflectionExplorer.INSTANCE.launchMainActivity(this));
+
+        updateInternalDexButtonText(btnInternalDex);
+        btnInternalDex.setOnClickListener(v -> {
+            try {
+                boolean enabled = Mods.getForcedInternalDexScreenModeEnabled();
+                Mods.setForcedInternalDexScreenModeEnabled(!enabled);
+
+                if (!enabled) {
+                    // Turning on... give some time for DEX to initialize
+                    btnInternalDex.setEnabled(false);
+                    btnInternalDex.setText("Starting internal Samsung DEX screen...");
+                    v.postDelayed(() -> {
+                        btnInternalDex.setEnabled(true);
+                        Mods.setDexExternalMouseConnected(true);
+                        updateInternalDexButtonText(btnInternalDex);
+                    }, 3000);
+                } else {
+                    // Turning off...
+                    updateInternalDexButtonText(btnInternalDex);
+                }
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Failed to start/stop internal dex", e);
+                Toast.makeText(MainActivity.this, "Failed to start/stop internal DEX screen: " + e + " (" + e.getMessage() + ")", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
         String id = "?";
         try {
@@ -196,6 +224,19 @@ public class MainActivity extends Activity {
         }
 
         ((TextView) findViewById(R.id.app_text)).setText(s.toString());
+    }
+
+    private void updateInternalDexButtonText(Button btn) {
+        try {
+            boolean enabled = Mods.getForcedInternalDexScreenModeEnabled();
+            int id = Mods.getDexDisplayId();
+            btn.setText(enabled ? "Stop internal Samsung DEX screen (ID=" + id + ")" : "Start internal Samsung DEX screen");
+        }
+        catch (Exception e) {
+            Log.e(TAG, "updateInternalDexButtonText: ", e);
+            btn.setText("Internal Samsung DEX screen unsupported");
+            btn.setEnabled(false);
+        }
     }
 
     @Override
