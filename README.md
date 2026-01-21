@@ -2,6 +2,8 @@ Fork changes:
 
 * branch `main`
    * Disables Android permission checking system-wide (for hardcoded packages and UIDs)
+   * Integrated Java reflection browser UI to explore and modify system service internals
+   * Start/stop Samsung DEX on an internal screen (can be connected to using `scrcpy --display-id=2`)
    * Simple integrated shell
 * branch `shizuku-launcher`
    * Runs as hidden system app on Samsung devices instead of system-server
