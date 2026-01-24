@@ -47,6 +47,9 @@ android {
 dependencies {
     implementation("com.github.yinyinnie.stetho:stetho:1.0.0")
     implementation("com.github.yinyinnie.stetho:stetho-js-rhino:1.0.0")
-    implementation(project(":reflection-explorer:library"))
+    implementation(project(":library"))
+
+    implementation(libs.refine.runtime)
+    compileOnly(project(":droppedapk:hidden-api"))
 }
 

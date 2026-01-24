@@ -1,6 +1,8 @@
 package com.example.abxoverflow.droppedapk;
 
 import android.annotation.SuppressLint;
+import android.os.IBinder;
+import android.os.ServiceManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -22,8 +24,7 @@ public class Mods {
 
     public static void enablePermissionManagerDelegate() {
         try {
-            Class<?> serviceManagerCls = Class.forName("android.os.ServiceManager");
-            Object serviceImpl = serviceManagerCls.getMethod("getService", String.class).invoke(null, "permissionmgr");
+            IBinder serviceImpl = ServiceManager.getService("permissionmgr");
             if (serviceImpl == null) {
                 Log.w(TAG, "service binder is null");
                 return;

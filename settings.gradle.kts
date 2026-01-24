@@ -24,7 +24,11 @@ dependencyResolutionManagement {
 rootProject.name = "AbxOverflow"
 include(":app")
 include(":droppedapk")
-include(":reflection-explorer:library")
 
-// Map the included project paths to the actual directories inside the `reflection-explorer` submodule
-project(":reflection-explorer:library").projectDir = file("reflection-explorer/library")
+// Include reflection explorer using alias, so its hidden-api submodule is accessible to it
+include(":library")
+include(":library:hidden-api")
+
+project(":library").projectDir = file("reflection-explorer/library")
+project(":library:hidden-api").projectDir = file("reflection-explorer/library/hidden-api")
+include(":droppedapk:hidden-api")

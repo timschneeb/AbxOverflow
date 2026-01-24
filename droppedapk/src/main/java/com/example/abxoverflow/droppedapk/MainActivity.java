@@ -3,24 +3,18 @@ package com.example.abxoverflow.droppedapk;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.IBinder;
 import android.os.Process;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import android.os.ServiceManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,13 +24,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 import me.timschneeberger.reflectionexplorer.Group;
 import me.timschneeberger.reflectionexplorer.Instance;
@@ -53,21 +43,15 @@ public class MainActivity extends Activity {
 
     @SuppressLint("PrivateApi")
     private static void collectInstances() {
-        // DEX package detection fails in the system-server; so we manually add relevant framework JARs
-        ParamNames.INSTANCE.getAdditionalDexSearchPaths().addAll(
-                List.of("/system/framework/services.jar", "/system/framework/framework.jar")
-        );
+        ParamNames.INSTANCE.getAdditionalDexSearchPaths().add("/system/framework/framework.jar");
 
         Group serviceGroup = new Group("Accessible Services", null);
         Group inaccServiceGroup = new Group("Inaccessible Services", null);
 
         // Get all services
         try {
-            Class<?> serviceManager = Class.forName("android.os.ServiceManager");
-            for (String serviceName : ((String[]) Objects.requireNonNull(serviceManager.getMethod("listServices").invoke(null)))) {
-                Object serviceObj = serviceManager
-                        .getMethod("getService", String.class)
-                        .invoke(null, serviceName);
+            for (String serviceName : ServiceManager.listServices()) {
+                IBinder serviceObj = ServiceManager.getService(serviceName);
 
                 if (serviceObj == null) {
                     Log.w(TAG, "Service " + serviceName + " is null, skipping");
@@ -199,25 +183,11 @@ public class MainActivity extends Activity {
                 .append("\n\nBelow is list of system services, as this app loads into system_server it can directly tamper with local ones (those that are non-null and non-BinderProxy)");
 
         try {
-            Class<?> serviceManager = Class.forName("android.os.ServiceManager");
-            for (String serviceName : ((String[]) serviceManager.getMethod("listServices").invoke(null))) {
-                String serviceStr;
-                try {
-                    Object serviceObj = serviceManager
-                            .getMethod("getService", String.class)
-                            .invoke(null, serviceName);
-                    if (serviceObj != null) {
-                        serviceStr = serviceObj.toString();
-                    } else {
-                        serviceStr = "null (getService() was disallowed)";
-                    }
-                } catch (Throwable e) {
-                    if (e instanceof InvocationTargetException) {
-                        e = ((InvocationTargetException) e).getTargetException();
-                    }
-                    serviceStr = e.getClass().getName() + ": " + e.getMessage();
-                }
-                s.append("\n\n").append(serviceName).append(":\n").append(serviceStr);
+            for (String serviceName : ServiceManager.listServices()) {
+                IBinder serviceObj = ServiceManager.getService(serviceName);
+                s.append("\n\n").append(serviceName).append(":\n").append(
+                        serviceObj != null ? serviceObj.toString() : "null"
+                );
             }
         } catch (Exception e) {
             s.append("\n\nFailed listing services");
@@ -252,7 +222,7 @@ public class MainActivity extends Activity {
             try {
                 // Delete <pastSigs> by directly editing PackageManagerService state within system_server
                 // ServiceManager.getService("package").this$0.mSettings.mSharedUsers.get("android.uid.system").getSigningDetails().mPastSigningCertificates = null
-                Object packManImplService = Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "package");
+                Object packManImplService = ServiceManager.getService("package");
                 Field packManImplThisField = packManImplService.getClass().getDeclaredField("this$0");
                 packManImplThisField.setAccessible(true);
                 Object packManService = packManImplThisField.get(packManImplService);
