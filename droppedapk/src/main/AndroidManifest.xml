@@ -28,6 +28,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".DebugActivity"
+            android:label="ProcessDebug"
+            android:exported="true"
+            android:showWhenLocked="true">
+        </activity>
+
         <receiver
             android:name=".LaunchReceiver"
             android:exported="true">

@@ -34,6 +34,12 @@
                 android:layout_height="wrap_content"
                 android:text="Start internal Samsung DEX screen" />
 
+            <Button
+                android:id="@+id/btn_test"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test" />
+
             <TextView
                 android:id="@+id/app_text"
                 android:layout_width="wrap_content"

