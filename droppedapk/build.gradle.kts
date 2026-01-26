@@ -30,6 +30,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     buildTypes {
@@ -49,8 +50,13 @@ android {
 }
 
 dependencies {
-    implementation("com.github.yinyinnie.stetho:stetho:1.0.0")
-    implementation("com.github.yinyinnie.stetho:stetho-js-rhino:1.0.0")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+
     implementation(project(":library"))
 
     implementation(libs.refine.runtime)

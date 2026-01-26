@@ -1,173 +1,205 @@
-package com.example.abxoverflow.droppedapk;
+package com.example.abxoverflow.droppedapk
 
-import android.annotation.SuppressLint;
-import android.os.IBinder;
-import android.os.ServiceManager;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.BiFunction;
+import android.annotation.SuppressLint
+import android.os.ServiceManager
+import android.util.Log
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import java.util.Objects
+import java.util.function.BiFunction
 
 @SuppressLint("PrivateApi")
-public class Mods {
-    private static final String TAG = "DroppedAPK_Mods";
+object Mods {
+    private const val TAG = "DroppedAPK_Mods"
 
-    public static void runAll() {
-        enablePermissionManagerDelegate();
+    fun runAll() {
+        enablePermissionManagerDelegate()
     }
 
-    public static void enablePermissionManagerDelegate() {
+    fun enablePermissionManagerDelegate() {
         try {
-            IBinder serviceImpl = ServiceManager.getService("permissionmgr");
+            val serviceImpl = ServiceManager.getService("permissionmgr")
             if (serviceImpl == null) {
-                Log.w(TAG, "service binder is null");
-                return;
+                Log.w(TAG, "service binder is null")
+                return
             }
 
-            Class<?> permMgrCls = serviceImpl.getClass();
-            String innerBinaryName = permMgrCls.getName() + "$CheckPermissionDelegate";
-            ClassLoader svcLoader = permMgrCls.getClassLoader();
-            Class<?> delegateCls = Class.forName(innerBinaryName, false, svcLoader);
-            Log.i(TAG, "Found CheckPermissionDelegate via service classloader: " + delegateCls.getName());
+            val permMgrCls: Class<*> = serviceImpl.javaClass
+            val innerBinaryName = permMgrCls.getName() + "\$CheckPermissionDelegate"
+            val svcLoader = permMgrCls.getClassLoader()
+            val delegateCls = Class.forName(innerBinaryName, false, svcLoader)
+            Log.i(TAG, "Found CheckPermissionDelegate via service classloader: " + delegateCls.getName())
 
-            Object delegateInstance = null;
-            if (delegateCls.isInterface()) {
-                delegateInstance = java.lang.reflect.Proxy.newProxyInstance(svcLoader, new Class[]{delegateCls},
-                        (proxy, method, args) -> {
+            var delegateInstance: Any? = null
+            if (delegateCls.isInterface) {
+                delegateInstance = Proxy.newProxyInstance(
+                    svcLoader, arrayOf<Class<*>?>(delegateCls)
+                ) { proxy: Any?, method: Method?, args: Array<Any?>? ->
+                    if (method!!.name == "checkPermission" && !(args!![0] as String).startsWith(
+                            "me.timschneeberger.unrestricted."
+                        )
+                    ) {
+                        // Forward to TriFunction.apply(Object, Object, Integer)
+                        // -> Default code path for other apps
+                        val triCls =
+                            Class.forName("com.android.internal.util.function.TriFunction")
+                        val apply = triCls.getMethod(
+                            "apply",
+                            Any::class.java,
+                            Any::class.java,
+                            Any::class.java
+                        )
+                        return@newProxyInstance (apply.invoke(
+                            args[3],
+                            args[0],
+                            args[1],
+                            args[2] as Int?
+                        ) as Int)
+                    }
+                    val uidWhitelist: MutableList<Int?> = ArrayList()
+                    uidWhitelist.add(1000) // TODO
 
-                            if (method.getName().equals("checkPermission") && !((String)args[0]).startsWith("me.timschneeberger.unrestricted.")) {
-                                // Forward to TriFunction.apply(Object, Object, Integer)
-                                // -> Default code path for other apps
-                                Class<?> triCls = Class.forName("com.android.internal.util.function.TriFunction");
-                                Method apply = triCls.getMethod("apply", Object.class, Object.class, Object.class);
-                                return ((Integer)apply.invoke(args[3], args[0], args[1], Integer.valueOf((Integer)args[2]))).intValue();
-                            }
+                    if (method.name == "checkUidPermission" && !uidWhitelist.contains(
+                            args!![0] as Int
+                        )
+                    ) {
+                        // Forward to BiFunction.apply(Object, Object)
+                        // -> Default code path for other apps
+                        @Suppress("UNCHECKED_CAST")
+                        return@newProxyInstance (args[2] as BiFunction<Any?, Any?, Any?>).apply(
+                            args[0] as Int?,
+                            args[1]
+                        )
+                    }
 
-                            List<Integer> uidWhitelist = new ArrayList<>();
-                            uidWhitelist.add(1000); // TODO
+                    Log.i(
+                        TAG,
+                        method.name + "(" + (args?.contentToString() ?: "") + ") called"
+                    )
 
-                            if (method.getName().equals("checkUidPermission") && !uidWhitelist.contains((int)args[0])) {
-                                // Forward to BiFunction.apply(Object, Object)
-                                // -> Default code path for other apps
-                                return ((BiFunction)args[2]).apply(Integer.valueOf((Integer) args[0]), args[1]);
-                            }
+                    val rt = method.returnType
+                    if (rt == Boolean::class.javaPrimitiveType) return@newProxyInstance true
+                    if (rt == Byte::class.javaPrimitiveType) return@newProxyInstance 0.toByte()
+                    if (rt == Short::class.javaPrimitiveType) return@newProxyInstance 0.toShort()
+                    if (rt == Int::class.javaPrimitiveType) return@newProxyInstance 0 // treat as PERMISSION_GRANTED
 
-                            Log.i(TAG,  method.getName() + "(" + (args != null ? java.util.Arrays.toString(args) : "") + ") called");
-
-
-                            Class<?> rt = method.getReturnType();
-                            if (rt == boolean.class) return true;
-                            if (rt == byte.class) return (byte) 0;
-                            if (rt == short.class) return (short) 0;
-                            if (rt == int.class) return 0; // treat as PERMISSION_GRANTED
-                            if (rt == long.class) return 0L;
-                            if (rt == float.class) return 0f;
-                            if (rt == double.class) return 0d;
-                            if (rt == char.class) return '\0';
-                            // for Object/void, return null
-                            return null;
-                        });
+                    if (rt == Long::class.javaPrimitiveType) return@newProxyInstance 0L
+                    if (rt == Float::class.javaPrimitiveType) return@newProxyInstance 0f
+                    if (rt == Double::class.javaPrimitiveType) return@newProxyInstance 0.0
+                    if (rt == Char::class.javaPrimitiveType) return@newProxyInstance '\u0000'
+                    null
+                }
             } else {
-                Log.e(TAG, "CheckPermissionDelegate type not found, passing null");
+                Log.e(TAG, "CheckPermissionDelegate type not found, passing null")
             }
 
             // Find and invoke the setter
-            Method setter = serviceImpl.getClass().getDeclaredMethod("setCheckPermissionDelegateLocked", delegateCls);
-            setter.setAccessible(true);
-            setter.invoke(serviceImpl, delegateInstance);
-            Log.i(TAG, "PermissionManagerService.setCheckPermissionDelegateLocked invoked");
-        } catch (Throwable t) {
-            Log.e(TAG, "Failed to set PermissionManagerService delegate", t);
+            val setter = serviceImpl.javaClass.getDeclaredMethod(
+                "setCheckPermissionDelegateLocked",
+                delegateCls
+            )
+            setter.isAccessible = true
+            setter.invoke(serviceImpl, delegateInstance)
+            Log.i(TAG, "PermissionManagerService.setCheckPermissionDelegateLocked invoked")
+        } catch (t: Throwable) {
+            Log.e(TAG, "Failed to set PermissionManagerService delegate", t)
         }
     }
 
-    public static boolean getForcedInternalDexScreenModeEnabled() {
-        try {
-            Object state = getDexState();
-            Method enabledMethod = state.getClass().getDeclaredMethod("isForcedInternalScreenModeEnabled");
-            return (boolean) enabledMethod.invoke(state);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "isDexModeEnabled: ", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static int getDexDisplayId() {
-        try {
-            Object state = getDexState();
-            Method getMethod = state.getClass().getDeclaredMethod("getDesktopDisplayId");
-            return (int) getMethod.invoke(state);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "getDexDisplayId: ", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Object getDexState() {
-        try {
-            Object dexStateMgr = Objects.requireNonNull(getDexStateManager());
-            Method getMethod = dexStateMgr.getClass().getDeclaredMethod("getState");
-            return getMethod.invoke(dexStateMgr);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "getDexState: ", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void setForcedInternalDexScreenModeEnabled(boolean enabled) {
-        try {
-            Object dexStateMgr = Objects.requireNonNull(getDexStateManager());
-            Method setMethod = dexStateMgr.getClass().getMethod("setForcedInternalScreenModeEnabled", boolean.class);
-            setMethod.invoke(dexStateMgr, enabled);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "enableDexMode: ", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void setDexExternalMouseConnected(boolean enabled) {
-        try {
-            Object dexStateMgr = Objects.requireNonNull(getDexStateManager());
-            Method setMouseConn = dexStateMgr.getClass().getMethod("setMouseConnected", boolean.class);
-            setMouseConn.invoke(dexStateMgr, enabled);
-            Method setTouchpadOn = dexStateMgr.getClass().getMethod("setTouchpadEnabled", boolean.class);
-            setTouchpadOn.invoke(dexStateMgr, !enabled);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "connectDexMouse: ", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Nullable
-    private static Object getDexStateManager() {
-        try {
-            Class<?> serviceManager = Class.forName("android.os.ServiceManager");
-            Object serviceObj = serviceManager
-                    .getMethod("getService", String.class)
-                    .invoke(null, "desktopmode");
-            if (serviceObj == null) {
-                Log.e(TAG, "getDexStateManager: serviceObj is null");
-                return null;
+    var forcedInternalDexScreenModeEnabled: Boolean
+        get() {
+            try {
+                val state: Any = dexState
+                val enabledMethod =
+                    state.javaClass.getDeclaredMethod("isForcedInternalScreenModeEnabled")
+                return enabledMethod.invoke(state) as Boolean
+            } catch (e: Exception) {
+                Log.e(TAG, "isDexModeEnabled: ", e)
+                throw RuntimeException(e)
             }
-
-            Field stateMgrField = serviceObj.getClass().getDeclaredField("mStateManager");
-            stateMgrField.setAccessible(true);
-            return stateMgrField.get(serviceObj);
         }
-        catch (Exception e) {
-            Log.e(TAG, "getDexStateManager: ", e);
-            throw new RuntimeException(e);
+        set(enabled) {
+            try {
+                val dexStateMgr =
+                    Objects.requireNonNull<Any>(dexStateManager)
+                val setMethod = dexStateMgr.javaClass.getMethod(
+                    "setForcedInternalScreenModeEnabled",
+                    Boolean::class.javaPrimitiveType
+                )
+                setMethod.invoke(dexStateMgr, enabled)
+            } catch (e: Exception) {
+                Log.e(TAG, "enableDexMode: ", e)
+                throw RuntimeException(e)
+            }
+        }
+
+    val dexDisplayId: Int
+        get() {
+            try {
+                val state: Any = dexState
+                val getMethod =
+                    state.javaClass.getDeclaredMethod("getDesktopDisplayId")
+                return getMethod.invoke(state) as Int
+            } catch (e: Exception) {
+                Log.e(TAG, "getDexDisplayId: ", e)
+                throw RuntimeException(e)
+            }
+        }
+
+    private val dexState: Any
+        get() {
+            try {
+                val dexStateMgr =
+                    Objects.requireNonNull<Any>(dexStateManager)
+                val getMethod =
+                    dexStateMgr.javaClass.getDeclaredMethod("getState")
+                return getMethod.invoke(dexStateMgr)!!
+            } catch (e: Exception) {
+                Log.e(TAG, "getDexState: ", e)
+                throw RuntimeException(e)
+            }
+        }
+
+    fun setDexExternalMouseConnected(enabled: Boolean) {
+        try {
+            val dexStateMgr = Objects.requireNonNull<Any>(dexStateManager)
+            val setMouseConn = dexStateMgr.javaClass.getMethod(
+                "setMouseConnected",
+                Boolean::class.javaPrimitiveType
+            )
+            setMouseConn.invoke(dexStateMgr, enabled)
+            val setTouchpadOn = dexStateMgr.javaClass.getMethod(
+                "setTouchpadEnabled",
+                Boolean::class.javaPrimitiveType
+            )
+            setTouchpadOn.invoke(dexStateMgr, !enabled)
+        } catch (e: Exception) {
+            Log.e(TAG, "connectDexMouse: ", e)
+            throw RuntimeException(e)
         }
     }
+
+    private val dexStateManager: Any?
+        get() {
+            try {
+                val serviceManager =
+                    Class.forName("android.os.ServiceManager")
+                val serviceObj = serviceManager
+                    .getMethod("getService", String::class.java)
+                    .invoke(null, "desktopmode")
+                if (serviceObj == null) {
+                    Log.e(TAG, "getDexStateManager: serviceObj is null")
+                    return null
+                }
+
+                val stateMgrField =
+                    serviceObj.javaClass.getDeclaredField("mStateManager")
+                stateMgrField.isAccessible = true
+                return stateMgrField.get(serviceObj)
+            } catch (e: Exception) {
+                Log.e(TAG, "getDexStateManager: ", e)
+                throw RuntimeException(e)
+            }
+        }
 }

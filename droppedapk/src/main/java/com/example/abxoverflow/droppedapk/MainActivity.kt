@@ -1,278 +1,164 @@
-package com.example.abxoverflow.droppedapk;
+package com.example.abxoverflow.droppedapk
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Process;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.IntentSender
+import android.os.Bundle
+import android.os.ServiceManager
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
+import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
+import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer.ActivityLauncher
 
-import android.os.ServiceManager;
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Field;
-import java.util.Map;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-import me.timschneeberger.reflectionexplorer.Group;
-import me.timschneeberger.reflectionexplorer.Instance;
-import me.timschneeberger.reflectionexplorer.ReflectionExplorer;
-import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames;
-
-public class MainActivity extends Activity {
-
-    static {
-        InstanceProvider.collectInstances();
-    }
-
-    private static final String TAG = "DroppedAPK";
-
-    @SuppressLint({"DiscouragedPrivateApi", "PrivateApi"})
-    private String getCurrentProcessNameSafe() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return Process.myProcessName();
-        }
-
-        try {
-            return (String) Class.forName("android.app.ActivityThread")
-                    .getDeclaredMethod("currentProcessName")
-                    .invoke(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "?";
-        }
-    }
-
-
-    private void startActivityWithProcess(Context context, Intent intent) {
-        // Assuming the caller is an activity context, copy the process extra if present.
-        String explicitProcess = intent.getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS);
-        if (context instanceof Activity) {
-            explicitProcess = ((Activity) context).getIntent().getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS);
-        } else {
-            Log.w(TAG, "Context is not an Activity, cannot copy explicit process extra");
-        }
-
-        try {
-            if (explicitProcess != null) {
-                context.startActivity(
-                        new Intent(context, SystemProcessTrampolineActivity.class)
-                                .putExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS, explicitProcess)
-                                .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT, intent)
-                );
-            } else {
-                context.startActivity(intent);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Process-aware launch failed", e);
-            showResultDialog("Error: " + e + " (" + e.getMessage() + ")");
-        }
-    }
-
-    private String printStream(InputStream stream, boolean isError) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        StringBuilder output = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-            output.append(line).append("\n");
-            if (isError) {
-                Log.e(TAG, line);
-            } else {
-                Log.i(TAG, line);
-            }
-        }
-        return output.toString();
-    }
-
-    private void showResultDialog(String message) {
-        new AlertDialog.Builder(this)
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        // TODO uncomment if frida required
-        // System.loadLibrary("frida-gadget-android");
-
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        Mods.runAll();
-
-        // Install a launcher that will use ProcessActivityLauncher when an explicit process is set.
-        ReflectionExplorer.activityLauncher = this::startActivityWithProcess;
-
-        Button btnShell = this.findViewById(R.id.btn_shell);
-        Button btnInspect = this.findViewById(R.id.btn_inspect);
-        Button btnInternalDex = this.findViewById(R.id.btn_internal_dex);
-        Button btnSwitchProcess = this.findViewById(R.id.btn_switch_process);
-
-        btnShell.setOnClickListener(v -> {
-            final EditText input = new EditText(this);
-
-            AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Run command")
-                    .setPositiveButton("Run", (dialog1, which) -> {
-                        // Prevent dialog from closing automatically
-                        try {
-                            java.lang.Process process = Runtime.getRuntime().exec(input.getText().toString());
-
-                            String out = printStream(process.getInputStream(), false);
-                            String err = printStream(process.getErrorStream(), true);
-
-                            input.setText("");
-
-                            showResultDialog(out + "\n" + err);
-                        } catch (IOException e) {
-                            Toast.makeText(MainActivity.this, "IOException while starting", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Failed to start shell", e);
-
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            showResultDialog(sw.toString());
-                        }
-                    })
-                    .setNegativeButton("Close", null)
-                    .create();
-            dialog.setView(input);
-            dialog.show();
-        });
-
-        btnInspect.setOnClickListener(v -> ReflectionExplorer.launchMainActivity(this));
-
-        updateInternalDexButtonText(btnInternalDex);
-        btnInternalDex.setOnClickListener(v -> {
+        // Load frida-gadget if requested
+        if (intent.getBooleanExtra(EXTRA_ATTACH_FRIDA_GADGET, false)) {
             try {
-                boolean enabled = Mods.getForcedInternalDexScreenModeEnabled();
-                Mods.setForcedInternalDexScreenModeEnabled(!enabled);
-
-                if (!enabled) {
-                    // Turning on... give some time for DEX to initialize
-                    btnInternalDex.setEnabled(false);
-                    btnInternalDex.setText("Starting internal Samsung DEX screen...");
-                    v.postDelayed(() -> {
-                        btnInternalDex.setEnabled(true);
-                        Mods.setDexExternalMouseConnected(true);
-                        updateInternalDexButtonText(btnInternalDex);
-                    }, 3000);
-                } else {
-                    // Turning off...
-                    updateInternalDexButtonText(btnInternalDex);
-                }
+                System.loadLibrary("frida-gadget-android")
+            } catch (e: UnsatisfiedLinkError) {
+                Log.e(TAG, "Failed to load frida-gadget-android library", e)
+                Toast.makeText(this, "Failed to load frida-gadget-android library: ${e.message}", Toast.LENGTH_LONG).show()
             }
-            catch (Exception e) {
-                Log.e(TAG, "Failed to start/stop internal dex", e);
-                Toast.makeText(MainActivity.this, "Failed to start/stop internal DEX screen: " + e + " (" + e.getMessage() + ")", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnSwitchProcess.setOnClickListener(v -> startActivity(
-                new Intent(this, SystemProcessTrampolineActivity.class)
-                        .putExtra(SystemProcessTrampolineActivity.EXTRA_SELECT_PROCESS, true)
-                        .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT,
-                                new Intent(this, MainActivity.class)
-                        )
-        ));
-
-        String id = "?";
-        try {
-            id = new BufferedReader(new InputStreamReader(Runtime.getRuntime().exec("id").getInputStream())).readLine();
-        } catch (IOException e) {}
-
-        StringBuilder s = new StringBuilder();
-        s
-                .append(
-                        "Note: Installation of this app involved registering new signature trusted for sharedUserId=android.uid.system," +
-                                " if you uninstall usual way it will stay in system" +
-                                " and you will be able to reinstall this app despite mismatched signature." +
-                                " To fully uninstall use \"Uninstall\" button within this app" +
-                                "\n\nuid=").append(Process.myUid())
-                .append("\npid=").append(Process.myPid())
-                .append("\nprocess=").append(getCurrentProcessNameSafe())
-                .append("\nexplicit_process=").append(getIntent().getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS))
-                .append("\n\n").append(id)
-                .append("\n\nBelow is list of system services, as this app loads into system_server it can directly tamper with local ones (those that are non-null and non-BinderProxy)");
-
-        try {
-            for (String serviceName : ServiceManager.listServices()) {
-                IBinder serviceObj = ServiceManager.getService(serviceName);
-                s.append("\n\n").append(serviceName).append(":\n").append(
-                        serviceObj != null ? serviceObj.toString() : "null"
-                );
-            }
-        } catch (Exception e) {
-            s.append("\n\nFailed listing services");
         }
 
-        ((TextView) findViewById(R.id.app_text)).setText(s.toString());
-    }
+        // Needed to override activity launching to support explicit process selection at runtime
+        ReflectionExplorer.activityLauncher = ActivityLauncher(::startActivityWithProcess)
 
-    private void updateInternalDexButtonText(Button btn) {
-        try {
-            boolean enabled = Mods.getForcedInternalDexScreenModeEnabled();
-            int id = Mods.getDexDisplayId();
-            btn.setText(enabled ? "Stop internal Samsung DEX screen (ID=" + id + ")" : "Start internal Samsung DEX screen");
+        // Apply various runtime modifications
+        Mods.runAll()
+
+        enableEdgeToEdge()
+        binding = ActivityMainBinding.inflate(layoutInflater).also { setContentView(it.root) }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { v, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updateLayoutParams<ViewGroup.MarginLayoutParams> { leftMargin = insets.left; topMargin = insets.top; rightMargin = insets.right }
+            WindowInsetsCompat.CONSUMED
         }
-        catch (Exception e) {
-            Log.e(TAG, "updateInternalDexButtonText: ", e);
-            btn.setText("Internal Samsung DEX screen unsupported");
-            btn.setEnabled(false);
+
+        if (savedInstanceState == null) {
+            RootFragment().also {
+                supportFragmentManager.beginTransaction().replace(R.id.container, it).commit()
+            }
+        }
+
+        binding.toolbar.apply {
+            setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+            setSupportActionBar(this)
+        }
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(supportFragmentManager.backStackEntryCount > 0)
+
+        supportFragmentManager.addOnBackStackChangedListener {
+            supportActionBar?.setDisplayHomeAsUpEnabled(
+                supportFragmentManager.backStackEntryCount > 0
+            )
+
+            invalidateOptionsMenu()
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.uninstall) {
+            showConfirmDialog(
+                title = "Uninstall DroppedAPK",
+                message = "This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?"
+            ) {
+                uninstall()
+            }
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     @SuppressLint("MissingPermission")
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.uninstall) {
-            try {
-                // Delete <pastSigs> by directly editing PackageManagerService state within system_server
-                // ServiceManager.getService("package").this$0.mSettings.mSharedUsers.get("android.uid.system").getSigningDetails().mPastSigningCertificates = null
-                Object packManImplService = ServiceManager.getService("package");
-                Field packManImplThisField = packManImplService.getClass().getDeclaredField("this$0");
-                packManImplThisField.setAccessible(true);
-                Object packManService = packManImplThisField.get(packManImplService);
-                Field settingsField = packManService.getClass().getDeclaredField("mSettings");
-                settingsField.setAccessible(true);
-                Object settings = settingsField.get(packManService);
-                Field sharedUsersField = settings.getClass().getDeclaredField("mSharedUsers");
-                sharedUsersField.setAccessible(true);
-                Object sharedUser = ((Map) sharedUsersField.get(settings)).get("android.uid.system");
-                Object signingDetails = sharedUser.getClass().getMethod("getSigningDetails").invoke(sharedUser);
-                Field pastSigningCertificatesField = signingDetails.getClass().getDeclaredField("mPastSigningCertificates");
-                pastSigningCertificatesField.setAccessible(true);
-                pastSigningCertificatesField.set(signingDetails, null);
-
-                // Uninstall this app (also triggers write of fixed packages.xml)
-                getPackageManager().getPackageInstaller().uninstall(getPackageName(), null);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Uninstall failed", Toast.LENGTH_SHORT).show();
+    private fun uninstall() {
+        try {
+            // Delete <pastSigs> by directly editing PackageManagerService state within system_server
+            // ServiceManager.getService("package").this$0.mSettings.mSharedUsers.get("android.uid.system").getSigningDetails().mPastSigningCertificates = null
+            val packManImplService: Any = ServiceManager.getService("package")
+            val packManService = packManImplService.javaClass.getDeclaredField("this$0").run {
+                isAccessible = true
+                get(packManImplService)
             }
-            return true;
+
+            val settings = packManService.javaClass.getDeclaredField("mSettings").run {
+                isAccessible = true
+                get(packManService)
+            }
+            val sharedUser = settings.javaClass.getDeclaredField("mSharedUsers").run {
+                isAccessible = true
+                (get(settings) as MutableMap<*, *>)["android.uid.system"]!!
+            }
+
+            val signingDetails = sharedUser.javaClass.getMethod("getSigningDetails").invoke(sharedUser)
+            signingDetails.javaClass.getDeclaredField("mPastSigningCertificates").apply {
+                isAccessible = true
+                set(signingDetails, null)
+            }
+
+            // Uninstall this app (also triggers write of fixed packages.xml)
+            val nullArg: IntentSender = null!!
+            packageManager.packageInstaller.uninstall(packageName, nullArg)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Uninstall failed", Toast.LENGTH_SHORT).show()
         }
-        return super.onOptionsItemSelected(item);
+    }
+
+    companion object {
+        private const val TAG = "DroppedAPK"
+
+        private const val EXTRA_ATTACH_FRIDA_GADGET = "com.example.abxoverflow.droppedapk.extra.ATTACH_FRIDA_GADGET"
+
+        fun startActivityWithProcess(context: Context, intent: Intent) {
+            // Assuming the caller is an activity context, copy the process extra if present.
+            var explicitProcess = intent.getStringExtra(EXTRA_EXPLICIT_PROCESS)
+            if (context is Activity) {
+                explicitProcess = context.intent.getStringExtra(EXTRA_EXPLICIT_PROCESS)
+            } else {
+                Log.w(TAG, "Context is not an Activity, cannot copy explicit process extra")
+            }
+
+            try {
+                if (explicitProcess != null) {
+                    context.startActivity(
+                        Intent(context, SystemProcessTrampolineActivity::class.java)
+                            .putExtra(EXTRA_EXPLICIT_PROCESS, explicitProcess)
+                            .putExtra(EXTRA_TARGET_INTENT, intent)
+                    )
+                } else {
+                    context.startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Process-aware launch failed", e)
+                Toast.makeText(context, "Error: " + e + " (" + e.message + ")", Toast.LENGTH_SHORT).show()
+            }
+        }
+        init { InstanceProvider.collectInstances() }
     }
 }

@@ -1,12 +1,11 @@
-package com.example.abxoverflow.droppedapk;
+package com.example.abxoverflow.droppedapk
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 
-public class LaunchReceiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        Mods.runAll();
+class LaunchReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        Mods.runAll()
     }
 }
