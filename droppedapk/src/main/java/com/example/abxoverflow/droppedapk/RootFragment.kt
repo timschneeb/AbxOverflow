@@ -22,7 +22,6 @@ import com.example.abxoverflow.droppedapk.utils.showInputAlert
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launchMainActivity
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.io.StringWriter

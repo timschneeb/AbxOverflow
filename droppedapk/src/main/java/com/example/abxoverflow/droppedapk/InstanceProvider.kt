@@ -3,6 +3,7 @@ package com.example.abxoverflow.droppedapk
 import android.annotation.SuppressLint
 import android.os.ServiceManager
 import android.util.Log
+import me.timschneeberger.reflectionexplorer.ErrorInstance
 import me.timschneeberger.reflectionexplorer.Group
 import me.timschneeberger.reflectionexplorer.Instance
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
@@ -15,24 +16,22 @@ object InstanceProvider {
     fun collectInstances() {
         additionalDexSearchPaths.add("/system/framework/framework.jar")
 
-        val serviceGroup = Group("Accessible System Services", null)
-
-        // Get all services
+        // Get all system services
         try {
-            for (serviceName in ServiceManager.listServices()) {
-                val serviceObj = ServiceManager.getService(serviceName)
-
-                if (serviceObj == null) {
-                    Log.w(TAG, "Service $serviceName is null, skipping")
-                    continue
+            ServiceManager
+                .listServices()
+                .mapNotNull { name ->
+                    ServiceManager.getService(name)
+                        ?.let { Instance(it, name, Group("Accessible System Services", null)) }
                 }
+                .filter { it.instance.javaClass.name != "android.os.BinderProxy" }
+                .forEach(ReflectionExplorer.instances::add)
 
-                if (serviceObj.javaClass.getName() != "android.os.BinderProxy") ReflectionExplorer.instances.add(
-                    Instance(serviceObj, serviceName, serviceGroup)
-                )
-            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed listing services", e)
+            ReflectionExplorer.instances.add(
+                ErrorInstance("Failed listing local system services: ${e.message}", e)
+            )
         }
     }
 }
