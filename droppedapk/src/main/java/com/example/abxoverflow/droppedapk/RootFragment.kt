@@ -56,7 +56,11 @@ class RootFragment : Fragment() {
                 }
             }
 
-            btnInspect.setOnClickListener { _ -> launchMainActivity(requireContext()) }
+            btnInspect.setOnClickListener { _ ->
+                // Refresh instances right before launching the explorer so the list is up to date
+                InstanceProvider.collectInstances()
+                launchMainActivity(requireContext())
+            }
 
             updateInternalDexButtonText(btnInternalDex)
             btnInternalDex.setOnClickListener { v: View ->

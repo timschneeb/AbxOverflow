@@ -130,6 +130,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Remove our activity launcher to avoid leaking this Activity instance into a static field
+        ReflectionExplorer.activityLauncher = null
+    }
+
     companion object {
         private const val TAG = "DroppedAPK"
 
@@ -159,6 +165,5 @@ class MainActivity : AppCompatActivity() {
                 context.toast("Error: " + e + " (" + e.message + ")")
             }
         }
-        init { InstanceProvider.collectInstances() }
     }
 }
