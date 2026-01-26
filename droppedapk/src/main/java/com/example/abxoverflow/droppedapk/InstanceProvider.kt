@@ -23,7 +23,7 @@ object InstanceProvider {
                 val serviceObj = ServiceManager.getService(serviceName)
 
                 if (serviceObj == null) {
-                    Log.w(TAG, "Service " + serviceName + " is null, skipping")
+                    Log.w(TAG, "Service $serviceName is null, skipping")
                     continue
                 }
 

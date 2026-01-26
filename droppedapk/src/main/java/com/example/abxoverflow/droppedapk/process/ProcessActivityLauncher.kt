@@ -40,17 +40,17 @@ object ProcessActivityLauncher {
         )
     }
 
-    @Throws(Exception::class)
+    @SuppressLint("PrivateApi")
     fun launch(
         context: Context,
         intent: Intent,
         userId: Int,
         processName: String?
     ) {
-        requireNotNull(intent.getComponent()) { "Intent must have explicit component" }
+        requireNotNull(intent.component) { "Intent must have explicit component" }
 
-        val pm = context.getPackageManager()
-        val ai = pm.getActivityInfo(intent.getComponent()!!, PackageManager.MATCH_ALL)
+        val pm = context.packageManager
+        val ai = pm.getActivityInfo(intent.component!!, PackageManager.MATCH_ALL)
         val appInfo = ai.applicationInfo
 
         val ams: Any = aMS
@@ -68,14 +68,14 @@ object ProcessActivityLauncher {
         val hostingRecord: Any =
             hostingCtor.newInstance(
                 "activity",  // hosting type
-                intent.getComponent()!!.flattenToShortString() // hosting name
+                intent.component!!.flattenToShortString() // hosting name
             )
 
         var startProcessLocked: Method? = null
 
         for (m in amsCls.getDeclaredMethods()) {
-            if (m.getName() == "startProcessLocked") {
-                m.setAccessible(true)
+            if (m.name == "startProcessLocked") {
+                m.isAccessible = true
                 startProcessLocked = m
                 break
             }
@@ -116,13 +116,13 @@ object ProcessActivityLauncher {
 
         val builderCls =
             Class.forName(
-                "com.android.server.wm.ActivityRecord\$Builder",
+                $$"com.android.server.wm.ActivityRecord$Builder",
                 true,
                 atmsCls.getClassLoader()
             )
 
         val builderCtor: Constructor<*> = builderCls.getDeclaredConstructor(atmsCls)
-        builderCtor.setAccessible(true)
+        builderCtor.isAccessible = true
         val builder: Any = builderCtor.newInstance(atms)
 
         // 3Set required fields
@@ -136,16 +136,16 @@ object ProcessActivityLauncher {
         builderCls.getDeclaredMethod("setLaunchedFromPackage", String::class.java)
             .invoke(builder, intent.getPackage())
         builderCls.getDeclaredMethod("setComponentSpecified", Boolean::class.javaPrimitiveType)
-            .invoke(builder, intent.getComponent() != null)
+            .invoke(builder, intent.component != null)
 
         // Build ActivityRecord
         val build = builderCls.getDeclaredMethod("build")
-        build.setAccessible(true)
+        build.isAccessible = true
         val activityRecord = build.invoke(builder)
 
         // Override activityRecord process name
         val processNameField = arCls.getDeclaredField("processName")
-        processNameField.setAccessible(true)
+        processNameField.isAccessible = true
         processNameField.set(activityRecord, processName)
 
         // ------------------------------------------------------------
@@ -155,8 +155,8 @@ object ProcessActivityLauncher {
             Class.forName("com.android.server.wm.ActivityStarter", true, atmsCls.getClassLoader())
         var startActivityUnchecked: Method? = null
         for (m in actStarterCls.getDeclaredMethods()) {
-            if (m.getName() == "startActivityUnchecked") {
-                m.setAccessible(true)
+            if (m.name == "startActivityUnchecked") {
+                m.isAccessible = true
                 startActivityUnchecked = m
                 break
             }

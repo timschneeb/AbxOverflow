@@ -3,7 +3,6 @@ package com.example.abxoverflow.droppedapk
 import android.annotation.SuppressLint
 import android.os.ServiceManager
 import android.util.Log
-import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.Objects
@@ -26,7 +25,7 @@ object Mods {
             }
 
             val permMgrCls: Class<*> = serviceImpl.javaClass
-            val innerBinaryName = permMgrCls.getName() + "\$CheckPermissionDelegate"
+            val innerBinaryName = $$"$${permMgrCls.getName()}$CheckPermissionDelegate"
             val svcLoader = permMgrCls.getClassLoader()
             val delegateCls = Class.forName(innerBinaryName, false, svcLoader)
             Log.i(TAG, "Found CheckPermissionDelegate via service classloader: " + delegateCls.getName())

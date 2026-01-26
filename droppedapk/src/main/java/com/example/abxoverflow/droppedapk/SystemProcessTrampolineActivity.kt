@@ -2,7 +2,6 @@ package com.example.abxoverflow.droppedapk
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
@@ -73,11 +72,8 @@ class SystemProcessTrampolineActivity : Activity() {
     companion object {
         private const val TAG = "DroppedAPK"
 
-        const val EXTRA_EXPLICIT_PROCESS: String =
-            "com.example.abxoverflow.droppedapk.EXTRA_EXPLICIT_PROCESS"
-        const val EXTRA_TARGET_INTENT: String =
-            "com.example.abxoverflow.droppedapk.EXTRA_TARGET_INTENT"
-        const val EXTRA_SELECT_PROCESS: String =
-            "com.example.abxoverflow.droppedapk.EXTRA_SELECT_PROCESS"
+        const val EXTRA_EXPLICIT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_EXPLICIT_PROCESS"
+        const val EXTRA_TARGET_INTENT: String = "${BuildConfig.APPLICATION_ID}.EXTRA_TARGET_INTENT"
+        const val EXTRA_SELECT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_SELECT_PROCESS"
     }
 }

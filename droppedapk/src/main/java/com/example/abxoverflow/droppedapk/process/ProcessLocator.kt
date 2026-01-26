@@ -4,10 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.SparseArray
+import androidx.core.util.size
 
 object ProcessLocator {
     private fun normalizeProcessName(pkg: String?, proc: String?): String? {
-        if (proc == null || proc.isEmpty()) {
+        if (proc.isNullOrEmpty()) {
             return pkg
         }
         if (proc.startsWith(":")) {
@@ -16,9 +17,9 @@ object ProcessLocator {
         return proc
     }
 
-    @Throws(Exception::class)
+    @SuppressLint("DiscouragedPrivateApi", "PrivateApi")
     fun listActiveProcessNamesForUid(uid: Int): MutableSet<String?> {
-        val result: MutableSet<String?> = HashSet<String?>()
+        val result: MutableSet<String?> = HashSet()
 
         // Get AMS
         val amClass = Class.forName("android.app.ActivityManager")
@@ -27,33 +28,34 @@ object ProcessLocator {
 
         // AMS.mProcessList
         val plField = ams!!.javaClass.getDeclaredField("mProcessList")
-        plField.setAccessible(true)
+        plField.isAccessible = true
         val processList = plField.get(ams)
 
         // ProcessList.mProcessNames (ProcessMap)
         val namesField = processList!!.javaClass.getDeclaredField("mProcessNames")
-        namesField.setAccessible(true)
+        namesField.isAccessible = true
         val processMap = namesField.get(processList)
 
         // ProcessMap.getMap()
-        @SuppressLint("BlockedPrivateApi") val getMap =
-            processMap!!.javaClass.getClassLoader().loadClass("com.android.internal.app.ProcessMap")
-                .getDeclaredMethod("getMap")
-        getMap.setAccessible(true)
+        @SuppressLint("BlockedPrivateApi")
+        val getMap = processMap!!.javaClass.getClassLoader()!!
+            .loadClass("com.android.internal.app.ProcessMap")
+            .getDeclaredMethod("getMap")
+        getMap.isAccessible = true
         val map = getMap.invoke(processMap) as MutableMap<*, *>?
 
         for (entryObj in map!!.values) {
             // entry is SparseArray<ProcessRecord>
             val entry = entryObj as SparseArray<*>
 
-            for (i in 0..<entry.size()) {
+            for (i in 0..<entry.size) {
                 val proc: Any = entry.valueAt(i)
 
                 val uidField = proc.javaClass.getDeclaredField("uid")
-                uidField.setAccessible(true)
+                uidField.isAccessible = true
                 if (uidField.getInt(proc) == uid) {
                     val nameField = proc.javaClass.getDeclaredField("processName")
-                    nameField.setAccessible(true)
+                    nameField.isAccessible = true
                     result.add(nameField.get(proc) as String?)
                 }
             }
@@ -63,9 +65,9 @@ object ProcessLocator {
 
 
     fun listAllProcessNamesForSystemUid(context: Context, uid: Int): MutableSet<String?> {
-        val result: MutableSet<String?> = HashSet<String?>()
+        val result: MutableSet<String?> = HashSet()
 
-        val pm = context.getPackageManager()
+        val pm = context.packageManager
 
         // Query *everything* for system apps
         val pkgs = pm.getInstalledPackages(
