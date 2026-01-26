@@ -21,6 +21,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
 import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
+import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.ActivityLauncher
 
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                 System.loadLibrary("frida-gadget-android")
             } catch (e: UnsatisfiedLinkError) {
                 Log.e(TAG, "Failed to load frida-gadget-android library", e)
-                Toast.makeText(this, "Failed to load frida-gadget-android library: ${e.message}", Toast.LENGTH_LONG).show()
+                toast("Failed to load frida-gadget-android library: ${e.message}")
             }
         }
 
@@ -126,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             packageManager.packageInstaller.uninstall(packageName, nullArg)
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Uninstall failed", Toast.LENGTH_SHORT).show()
+            toast("Uninstall failed")
         }
     }
 
@@ -156,7 +157,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Process-aware launch failed", e)
-                Toast.makeText(context, "Error: " + e + " (" + e.message + ")", Toast.LENGTH_SHORT).show()
+                context.toast("Error: " + e + " (" + e.message + ")")
             }
         }
         init { InstanceProvider.collectInstances() }

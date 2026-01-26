@@ -8,23 +8,22 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
-import android.widget.Toast
 import com.example.abxoverflow.droppedapk.process.ProcessActivityLauncher
 import com.example.abxoverflow.droppedapk.process.ProcessLocator
+import com.example.abxoverflow.droppedapk.utils.toast
 import kotlin.collections.sortedBy
 
 class SystemProcessTrampolineActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        @SuppressLint("UnsafeIntentLaunch") val intent = getIntent().getParcelableExtra<Intent?>(
-            EXTRA_TARGET_INTENT
-        )
+        @SuppressLint("UnsafeIntentLaunch")
+        val intent = intent.getParcelableExtra<Intent?>(EXTRA_TARGET_INTENT)
         val explicitProcess = getIntent().getStringExtra(EXTRA_EXPLICIT_PROCESS)
         val selectProcess = getIntent().getBooleanExtra(EXTRA_SELECT_PROCESS, false)
 
         if (intent == null) {
-            Toast.makeText(this, "No target intent provided", Toast.LENGTH_SHORT).show()
+            toast("No target intent provided")
             finish()
             return
         }
@@ -42,7 +41,7 @@ class SystemProcessTrampolineActivity : Activity() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Process-aware launch failed", e)
-            Toast.makeText(this, "Error: " + e + " (" + e.message + ")", Toast.LENGTH_LONG).show()
+            toast("Error: " + e + " (" + e.message + ")")
             finish()
         }
     }
@@ -55,7 +54,7 @@ class SystemProcessTrampolineActivity : Activity() {
         val processArray = proc.sortedBy { it }.toTypedArray()
         builder.setItems(
             processArray
-        ) { dialog: DialogInterface?, which: Int ->
+        ) { _: DialogInterface?, which: Int ->
             val selectedProcess = processArray[which]
             try {
                 ProcessActivityLauncher.launch(
@@ -65,12 +64,11 @@ class SystemProcessTrampolineActivity : Activity() {
                     selectedProcess
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to launch activity in process " + selectedProcess, e)
-                Toast.makeText(this, "Error: " + e + " (" + e.message + ")", Toast.LENGTH_SHORT)
-                    .show()
+                Log.e(TAG, "Failed to launch activity in process $selectedProcess", e)
+                toast("Error: $e (${e.message})")
             }
         }
-        builder.setOnDismissListener { dialog: DialogInterface? -> finish() }
+        builder.setOnDismissListener { _ -> finish() }
         builder.show()
     }
 
