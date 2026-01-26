@@ -94,17 +94,16 @@ fun Context.toast(@StringRes message: Int, long: Boolean = true) = toast(getStri
 
 
 fun InputStream?.readToString(isError: Boolean): String {
-    BufferedReader(InputStreamReader(this)).use { reader ->
-        var line: String
+    return this?.bufferedReader()?.use { reader ->
         val output = StringBuilder()
-        while ((reader.readLine().also { line = it }) != null) {
-            output.append(line).append("\n")
+        reader.forEachLine { line ->
+            output.append(line).append('\n')
             if (isError) {
                 Log.e("DroppedAPK", line)
             } else {
                 Log.i("DroppedAPK", line)
             }
         }
-        return output.toString()
-    }
+        output.toString()
+    } ?: ""
 }

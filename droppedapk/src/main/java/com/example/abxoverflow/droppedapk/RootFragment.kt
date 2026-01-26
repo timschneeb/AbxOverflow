@@ -46,7 +46,7 @@ class RootFragment : Fragment() {
                         val err = process.errorStream.readToString(true)
 
                         requireContext().showAlert("Result", out + "\n" + err)
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
                         Log.e(TAG, "Failed to start shell", e)
 
                         val sw = StringWriter()
