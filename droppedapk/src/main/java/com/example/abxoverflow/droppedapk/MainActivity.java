@@ -36,7 +36,7 @@ import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames;
 public class MainActivity extends Activity {
 
     static {
-        collectInstances();
+        InstanceProvider.collectInstances();
     }
 
     private static final String TAG = "DroppedAPK";
@@ -83,33 +83,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    @SuppressLint("PrivateApi")
-    private static void collectInstances() {
-        ParamNames.INSTANCE.getAdditionalDexSearchPaths().add("/system/framework/framework.jar");
-
-        Group serviceGroup = new Group("Accessible System Services", null);
-        Group inaccServiceGroup = new Group("Inaccessible System Services", null);
-
-        // Get all services
-        try {
-            for (String serviceName : ServiceManager.listServices()) {
-                IBinder serviceObj = ServiceManager.getService(serviceName);
-
-                if (serviceObj == null) {
-                    Log.w(TAG, "Service " + serviceName + " is null, skipping");
-                    continue;
-                }
-
-                if (serviceObj.getClass().getName().equals("android.os.BinderProxy")) {
-                    ReflectionExplorer.instances.add(new Instance(serviceObj, serviceName, inaccServiceGroup));
-                    continue;
-                }
-                ReflectionExplorer.instances.add(new Instance(serviceObj, serviceName, serviceGroup));
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed listing services", e);
-        }
-    }
     private String printStream(InputStream stream, boolean isError) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         String line;
@@ -210,15 +183,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        btnSwitchProcess.setOnClickListener(v -> {
-            startActivity(
-                    new Intent(this, SystemProcessTrampolineActivity.class)
-                            .putExtra(SystemProcessTrampolineActivity.EXTRA_SELECT_PROCESS, true)
-                            .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT,
-                                    new Intent(this, MainActivity.class)
-                            )
-            );
-        });
+        btnSwitchProcess.setOnClickListener(v -> startActivity(
+                new Intent(this, SystemProcessTrampolineActivity.class)
+                        .putExtra(SystemProcessTrampolineActivity.EXTRA_SELECT_PROCESS, true)
+                        .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT,
+                                new Intent(this, MainActivity.class)
+                        )
+        ));
 
         String id = "?";
         try {
