@@ -11,6 +11,7 @@ import android.util.Log
 import com.example.abxoverflow.droppedapk.process.ProcessActivityLauncher
 import com.example.abxoverflow.droppedapk.process.ProcessLocator
 import com.example.abxoverflow.droppedapk.utils.toast
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlin.collections.sortedBy
 
 class SystemProcessTrampolineActivity : Activity() {
@@ -47,29 +48,26 @@ class SystemProcessTrampolineActivity : Activity() {
     }
 
     private fun selectProcessAndLaunch(intent: Intent) {
-        val proc = ProcessLocator.listActiveProcessNamesForUid(Process.myUid())
+        val processes = ProcessLocator.listActiveProcessNamesForUid(Process.myUid())
+            .sortedBy { it }
+            .toTypedArray()
 
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Select process to switch to...")
-        val processArray = proc.sortedBy { it }.toTypedArray()
-        builder.setItems(
-            processArray
-        ) { _: DialogInterface?, which: Int ->
-            val selectedProcess = processArray[which]
-            try {
-                ProcessActivityLauncher.launch(
-                    this,
-                    intent,
-                    Process.myUid(),
-                    selectedProcess
-                )
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to launch activity in process $selectedProcess", e)
-                toast("Error: $e (${e.message})")
-            }
-        }
-        builder.setOnDismissListener { _ -> finish() }
-        builder.show()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Select process to switch to...")
+            .setOnDismissListener { _ -> finish() }
+            .setItems(processes) { _: DialogInterface?, which: Int ->
+                try {
+                    ProcessActivityLauncher.launch(
+                        this,
+                        intent,
+                        Process.myUid(),
+                        processes[which]
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to launch activity in process", e)
+                    toast("Error: $e (${e.message})")
+                }
+            }.show()
     }
 
     companion object {
