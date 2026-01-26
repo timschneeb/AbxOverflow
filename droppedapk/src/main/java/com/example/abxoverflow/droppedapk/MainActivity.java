@@ -3,6 +3,8 @@ package com.example.abxoverflow.droppedapk;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,8 +18,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import android.os.ServiceManager;
-
-import com.example.abxoverflow.droppedapk.debug.ProcessActivityLauncher;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,23 +41,54 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "DroppedAPK";
 
+    @SuppressLint({"DiscouragedPrivateApi", "PrivateApi"})
+    private String getCurrentProcessNameSafe() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return Process.myProcessName();
+        }
 
-    private void runTest() throws Exception {
-        ProcessActivityLauncher.launch(
-                this,
-                "com.example.abxoverflow.droppedapk.system",
-                "com.example.abxoverflow.droppedapk.DebugActivity",
-                Process.myUid(),
-                "com.sec.android.diagmonagent"
-        );
+        try {
+            return (String) Class.forName("android.app.ActivityThread")
+                    .getDeclaredMethod("currentProcessName")
+                    .invoke(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "?";
+        }
+    }
+
+
+    private void startActivityWithProcess(Context context, Intent intent) {
+        // Assuming the caller is an activity context, copy the process extra if present.
+        String explicitProcess = intent.getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS);
+        if (context instanceof Activity) {
+            explicitProcess = ((Activity) context).getIntent().getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS);
+        } else {
+            Log.w(TAG, "Context is not an Activity, cannot copy explicit process extra");
+        }
+
+        try {
+            if (explicitProcess != null) {
+                context.startActivity(
+                        new Intent(context, SystemProcessTrampolineActivity.class)
+                                .putExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS, explicitProcess)
+                                .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT, intent)
+                );
+            } else {
+                context.startActivity(intent);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Process-aware launch failed", e);
+            showResultDialog("Error: " + e + " (" + e.getMessage() + ")");
+        }
     }
 
     @SuppressLint("PrivateApi")
     private static void collectInstances() {
         ParamNames.INSTANCE.getAdditionalDexSearchPaths().add("/system/framework/framework.jar");
 
-        Group serviceGroup = new Group("Accessible Services", null);
-        Group inaccServiceGroup = new Group("Inaccessible Services", null);
+        Group serviceGroup = new Group("Accessible System Services", null);
+        Group inaccServiceGroup = new Group("Inaccessible System Services", null);
 
         // Get all services
         try {
@@ -70,10 +101,10 @@ public class MainActivity extends Activity {
                 }
 
                 if (serviceObj.getClass().getName().equals("android.os.BinderProxy")) {
-                    ReflectionExplorer.INSTANCE.getInstances().add(new Instance(serviceObj, serviceName, inaccServiceGroup));
+                    ReflectionExplorer.instances.add(new Instance(serviceObj, serviceName, inaccServiceGroup));
                     continue;
                 }
-                ReflectionExplorer.INSTANCE.getInstances().add(new Instance(serviceObj, serviceName, serviceGroup));
+                ReflectionExplorer.instances.add(new Instance(serviceObj, serviceName, serviceGroup));
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed listing services", e);
@@ -111,10 +142,13 @@ public class MainActivity extends Activity {
 
         Mods.runAll();
 
+        // Install a launcher that will use ProcessActivityLauncher when an explicit process is set.
+        ReflectionExplorer.activityLauncher = this::startActivityWithProcess;
+
         Button btnShell = this.findViewById(R.id.btn_shell);
         Button btnInspect = this.findViewById(R.id.btn_inspect);
         Button btnInternalDex = this.findViewById(R.id.btn_internal_dex);
-        Button btnTest = this.findViewById(R.id.btn_test);
+        Button btnSwitchProcess = this.findViewById(R.id.btn_switch_process);
 
         btnShell.setOnClickListener(v -> {
             final EditText input = new EditText(this);
@@ -148,7 +182,7 @@ public class MainActivity extends Activity {
             dialog.show();
         });
 
-        btnInspect.setOnClickListener(v -> ReflectionExplorer.INSTANCE.launchMainActivity(this));
+        btnInspect.setOnClickListener(v -> ReflectionExplorer.launchMainActivity(this));
 
         updateInternalDexButtonText(btnInternalDex);
         btnInternalDex.setOnClickListener(v -> {
@@ -176,14 +210,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        btnTest.setOnClickListener(v -> {
-            try {
-                runTest();
-            }
-            catch (Exception e) {
-                Log.e(TAG, "Failed to run test", e);
-                Toast.makeText(MainActivity.this, "Failed to run test: " + e + " (" + e.getMessage() + ")", Toast.LENGTH_SHORT).show();
-            }
+        btnSwitchProcess.setOnClickListener(v -> {
+            startActivity(
+                    new Intent(this, SystemProcessTrampolineActivity.class)
+                            .putExtra(SystemProcessTrampolineActivity.EXTRA_SELECT_PROCESS, true)
+                            .putExtra(SystemProcessTrampolineActivity.EXTRA_TARGET_INTENT,
+                                    new Intent(this, MainActivity.class)
+                            )
+            );
         });
 
         String id = "?";
@@ -200,7 +234,8 @@ public class MainActivity extends Activity {
                                 " To fully uninstall use \"Uninstall\" button within this app" +
                                 "\n\nuid=").append(Process.myUid())
                 .append("\npid=").append(Process.myPid())
-                .append("\nprocess=").append((Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ? Process.myProcessName() : "?")
+                .append("\nprocess=").append(getCurrentProcessNameSafe())
+                .append("\nexplicit_process=").append(getIntent().getStringExtra(SystemProcessTrampolineActivity.EXTRA_EXPLICIT_PROCESS))
                 .append("\n\n").append(id)
                 .append("\n\nBelow is list of system services, as this app loads into system_server it can directly tamper with local ones (those that are non-null and non-BinderProxy)");
 

@@ -16,6 +16,8 @@ import java.lang.reflect.Method;
 
 public final class ProcessActivityLauncher {
 
+    public static final String EXTRA_EXPLICIT_PROCESS = "com.example.abxoverflow.droppedapk.EXTRA_EXPLICIT_PROCESS";
+
     private static IBinder getAMS() {
         return ServiceManager.getService("activity");
     }
@@ -25,16 +27,33 @@ public final class ProcessActivityLauncher {
         return ServiceManager.getService("activity_task");
     }
 
+
     public static void launch(
             Context context,
             String pkg,
             String activityCls,
             int userId,
             String processName) throws Exception {
+        launch(
+                context,
+                new Intent().setComponent(new ComponentName(pkg, activityCls)),
+                userId,
+                processName
+        );
+    }
+
+    public static void launch(
+            Context context,
+            Intent intent,
+            int userId,
+            String processName) throws Exception {
+
+        if (intent.getComponent() == null) {
+            throw new IllegalArgumentException("Intent must have explicit component");
+        }
 
         PackageManager pm = context.getPackageManager();
-        ComponentName cn = new ComponentName(pkg, activityCls);
-        ActivityInfo ai = pm.getActivityInfo(cn, PackageManager.MATCH_ALL);
+        ActivityInfo ai = pm.getActivityInfo(intent.getComponent(), PackageManager.MATCH_ALL);
         ApplicationInfo appInfo = ai.applicationInfo;
 
         Object ams = getAMS();
@@ -52,7 +71,7 @@ public final class ProcessActivityLauncher {
         Object hostingRecord =
                 hostingCtor.newInstance(
                         "activity", // hosting type
-                        cn.flattenToShortString() // hosting name
+                        intent.getComponent().flattenToShortString() // hosting name
                 );
 
         Method startProcessLocked = null;
@@ -77,7 +96,7 @@ public final class ProcessActivityLauncher {
                     false, // knownToBeDead
                     0, // intentFlags
                     hostingRecord,
-                    0, // zygotePolicyFlags TODO
+                    0, // zygotePolicyFlags
                     false, // allowWhileBooting
                     false // isolated
             );
@@ -88,9 +107,9 @@ public final class ProcessActivityLauncher {
         // 5. Build Intent
         // ------------------------------------------------------------
 
-        Intent intent = new Intent();
-        intent.setComponent(cn);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // Forward explicit process info so the launched activity can persist and detect it
+        intent.putExtra(EXTRA_EXPLICIT_PROCESS, processName);
 
         // ------------------------------------------------------------
         // 6. Create ActivityRecord reflectively
@@ -114,8 +133,8 @@ public final class ProcessActivityLauncher {
         builderCls.getDeclaredMethod("setIntent", Intent.class).invoke(builder, intent);
         builderCls.getDeclaredMethod("setLaunchedFromPid", int.class).invoke(builder, android.os.Process.myPid());
         builderCls.getDeclaredMethod("setLaunchedFromUid", int.class).invoke(builder, userId);
-        builderCls.getDeclaredMethod("setLaunchedFromPackage", String.class).invoke(builder, pkg);
-        builderCls.getDeclaredMethod("setComponentSpecified", boolean.class).invoke(builder, true);
+        builderCls.getDeclaredMethod("setLaunchedFromPackage", String.class).invoke(builder, intent.getPackage());
+        builderCls.getDeclaredMethod("setComponentSpecified", boolean.class).invoke(builder, intent.getComponent() != null);
 
 // Build ActivityRecord
         Method build = builderCls.getDeclaredMethod("build");

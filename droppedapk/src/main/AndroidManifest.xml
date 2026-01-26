@@ -28,10 +28,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Activity running in the system process able to switch processes -->
         <activity
-            android:name=".DebugActivity"
-            android:label="ProcessDebug"
+            android:name=".SystemProcessTrampolineActivity"
+            android:process="system"
             android:exported="true"
+            android:theme="@style/Theme.Transparent"
             android:showWhenLocked="true">
         </activity>
 
