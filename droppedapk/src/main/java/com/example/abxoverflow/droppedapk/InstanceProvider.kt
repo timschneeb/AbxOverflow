@@ -18,23 +18,25 @@ import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.utils.cast
 import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames.additionalDexSearchPaths
 
-object InstanceProvider {
+object InstanceProvider : ReflectionExplorer.IInstancesProvider {
     private const val TAG = "DroppedAPK_InstanceProvider"
 
-    private inline fun <T> T.runCollector(name: String, block: T.() -> Unit){
-        runCatching(block).onFailure {
-            "Failed to list ${name}: ${it.message}".let { msg ->
-                Log.e(TAG, msg, it)
-                ReflectionExplorer.instances.add(ErrorInstance(msg, it))
-            }
-        }
-    }
-
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
-    fun collectInstances() {
+    override fun provide(context: Context): List<Instance> {
         additionalDexSearchPaths.add("/system/framework/framework.jar")
 
-        ReflectionExplorer.instances.clear()
+        Log.e(TAG, "Collecting instances...")
+
+        val instances = mutableListOf<Instance>()
+
+        fun runCollector(name: String, block: () -> Unit){
+            runCatching(block).onFailure {
+                "Failed to list ${name}: ${it.message}".let { msg ->
+                    Log.e(TAG, msg, it)
+                    instances.add(ErrorInstance(msg, it))
+                }
+            }
+        }
 
         // Collect ActivityThread internals via reflection
         try {
@@ -53,9 +55,9 @@ object InstanceProvider {
                             .getObject("activity")
                             ?.cast<Activity>()
                             ?.let { activity ->
-                                ReflectionExplorer.instances.add(Instance(activity, activity.javaClass.simpleName, Group("Active Activities", null)))
+                                instances.add(Instance(activity, activity.javaClass.simpleName, Group("Active Activities", null)))
                             }
-                }
+                    }
             }
 
             // mAllApplications -> List<Application>
@@ -66,7 +68,7 @@ object InstanceProvider {
                     .cast<List<Application>>()
                     .filter { it.packageName != BuildConfig.APPLICATION_ID }
                     .map { obj -> Instance(obj, obj.javaClass.simpleName, Group("Applications", null)) }
-                    .let(ReflectionExplorer.instances::addAll)
+                    .let(instances::addAll)
             }
 
             // mServices -> Map<IBinder, Service>
@@ -78,7 +80,7 @@ object InstanceProvider {
                     .values
                     .mapNotNull { svc -> svc as? Service }
                     .map { svc -> Instance(svc, svc.javaClass.simpleName, Group("Services", null)) }
-                    .let(ReflectionExplorer.instances::addAll)
+                    .let(instances::addAll)
             }
 
             // mLocalProvidersByName -> Map<ComponentName, ProviderClientRecord>
@@ -90,7 +92,7 @@ object InstanceProvider {
                     .values
                     .mapNotNull { it?.objectHelper()?.getObject("mLocalProvider") }
                     .map { obj -> Instance(obj, obj.javaClass.simpleName, Group("Local Providers", null)) }
-                    .let(ReflectionExplorer.instances::addAll)
+                    .let(instances::addAll)
             }
 
             // ArrayMap<Context, ArrayMap<BroadcastReceiver, ReceiverDispatcher>> mReceivers
@@ -105,12 +107,12 @@ object InstanceProvider {
                             .getObject("mPackageInfo")!!
                             .objectHelper()
                             .getObject("mReceivers")!!
-                                .cast<ArrayMap<Context, Any>>() // <Context, ArrayMap<BroadcastReceiver, ReceiverDispatcher>>
-                                .flatMap {
-                                    it.value
-                                        .cast<ArrayMap<Any, Any>>()
-                                        .values
-                                }
+                            .cast<ArrayMap<Context, Any>>() // <Context, ArrayMap<BroadcastReceiver, ReceiverDispatcher>>
+                            .flatMap {
+                                it.value
+                                    .cast<ArrayMap<Any, Any>>()
+                                    .values
+                            }
                     }
                     .map { it.objectHelper().getObject("mReceiver")!! }
                     .map { receivers ->
@@ -120,12 +122,12 @@ object InstanceProvider {
                             Group("Receivers", null)
                         )
                     }
-                    .let(ReflectionExplorer.instances::addAll)
+                    .let(instances::addAll)
             }
 
         } catch (e: Exception) {
             Log.w(TAG, "Failed collecting ActivityThread instances", e)
-            ReflectionExplorer.instances.add(ErrorInstance("Failed collecting ActivityThread instances: ${e.message}", e))
+            instances.add(ErrorInstance("Failed collecting ActivityThread instances: ${e.message}", e))
         }
 
         // Probe ContentService -> mRootNode -> mChildren (ObserverNode list)
@@ -139,7 +141,7 @@ object InstanceProvider {
                 ?.getObject("mChildren")
                 ?.cast<List<*>>()
                 ?.map { Instance(it!!, it.objectHelper().getObject("mName").toString(), Group("Observers", null)) }
-                ?.let(ReflectionExplorer.instances::addAll)
+                ?.let(instances::addAll)
         }
 
         // Get all system services hosted in this process
@@ -151,7 +153,11 @@ object InstanceProvider {
                         ?.let { Instance(it, name, Group("System Services", null)) }
                 }
                 .filter { it.instance.javaClass.name != "android.os.BinderProxy" }
-                .let(ReflectionExplorer.instances::addAll)
+                .let(instances::addAll)
         }
+
+        Log.e(TAG, "Provided ${instances.size} instances")
+
+        return instances
     }
 }

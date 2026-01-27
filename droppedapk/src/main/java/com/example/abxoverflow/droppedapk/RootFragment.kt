@@ -20,7 +20,8 @@ import com.example.abxoverflow.droppedapk.utils.readToString
 import com.example.abxoverflow.droppedapk.utils.showAlert
 import com.example.abxoverflow.droppedapk.utils.showInputAlert
 import com.example.abxoverflow.droppedapk.utils.toast
-import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launchMainActivity
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -57,9 +58,9 @@ class RootFragment : Fragment() {
             }
 
             btnInspect.setOnClickListener { _ ->
-                // Refresh instances right before launching the explorer so the list is up to date
-                InstanceProvider.collectInstances()
-                launchMainActivity(requireContext())
+                Log.e(TAG, "Launching Reflection Explorer into current process")
+                ReflectionExplorer.instancesProvider = InstanceProvider
+                launch(requireContext())
             }
 
             updateInternalDexButtonText(btnInternalDex)

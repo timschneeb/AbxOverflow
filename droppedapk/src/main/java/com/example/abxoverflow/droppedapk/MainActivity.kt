@@ -22,7 +22,7 @@ import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
 import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
-import me.timschneeberger.reflectionexplorer.ReflectionExplorer.ActivityLauncher
+import me.timschneeberger.reflectionexplorer.ReflectionExplorer.IActivityLauncher
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Needed to override activity launching to support explicit process selection at runtime
-        ReflectionExplorer.activityLauncher = ActivityLauncher(::startActivityWithProcess)
+        ReflectionExplorer.activityLauncher = IActivityLauncher(::startActivityWithProcess)
 
         // Apply various runtime modifications
         Mods.runAll()
