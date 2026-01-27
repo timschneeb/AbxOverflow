@@ -3,6 +3,7 @@
 package com.example.abxoverflow.droppedapk.utils
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.text.Editable
 import android.text.InputType
 import android.util.Log
@@ -105,4 +106,22 @@ fun InputStream?.readToString(isError: Boolean): String {
         }
         output.toString()
     } ?: ""
+}
+
+fun Context.unwrapContext(): Context {
+    // Contexts may be wrapped, unwrap them to get the ContextImpl instance
+    val context = this
+    if(context is ContextWrapper) {
+        val baseContext = context.baseContext
+        if(baseContext != null && baseContext != context) {
+            return baseContext.unwrapContext()
+        }
+        throw IllegalStateException("Unable to locate base context from ContextWrapper")
+    }
+
+    if (context.javaClass.name != "android.app.ContextImpl") {
+        throw IllegalStateException("Expected ContextImpl but found ${context.javaClass.name}")
+    }
+
+    return context
 }

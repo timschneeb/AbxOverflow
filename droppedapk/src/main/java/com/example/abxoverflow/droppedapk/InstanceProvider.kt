@@ -5,8 +5,11 @@ import android.app.Activity
 import android.app.ActivityThread
 import android.app.Application
 import android.app.Service
+import android.content.Context
 import android.os.ServiceManager
+import android.util.ArrayMap
 import android.util.Log
+import com.example.abxoverflow.droppedapk.utils.unwrapContext
 import io.github.kyuubiran.ezxhelper.core.helper.ObjectHelper.`-Static`.objectHelper
 import me.timschneeberger.reflectionexplorer.ErrorInstance
 import me.timschneeberger.reflectionexplorer.Group
@@ -14,7 +17,6 @@ import me.timschneeberger.reflectionexplorer.Instance
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.utils.cast
 import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames.additionalDexSearchPaths
-import java.lang.ref.WeakReference
 
 object InstanceProvider {
     private const val TAG = "DroppedAPK_InstanceProvider"
@@ -90,6 +92,36 @@ object InstanceProvider {
                     .let(ReflectionExplorer.instances::addAll)
             }
 
+            // ArrayMap<Context, ArrayMap<BroadcastReceiver, ReceiverDispatcher>> mReceivers
+            runCollector("receivers") {
+                currentActivityThread
+                    .objectHelper()
+                    .getObject("mAllApplications")!!
+                    .cast<List<Application>>()
+                    .flatMap { app ->
+                        app.unwrapContext()
+                            .objectHelper()
+                            .getObject("mPackageInfo")!!
+                            .objectHelper()
+                            .getObject("mReceivers")!!
+                                .cast<ArrayMap<Context, Any>>() // <Context, ArrayMap<BroadcastReceiver, ReceiverDispatcher>>
+                                .flatMap {
+                                    it.value
+                                        .cast<ArrayMap<Any, Any>>()
+                                        .values
+                                }
+                    }
+                    .map { it.objectHelper().getObject("mReceiver")!! }
+                    .map { receivers ->
+                        Instance(
+                            receivers,
+                            receivers.javaClass.simpleName,
+                            Group("Receivers", null)
+                        )
+                    }
+                    .let(ReflectionExplorer.instances::addAll)
+            }
+
         } catch (e: Exception) {
             Log.w(TAG, "Failed collecting ActivityThread instances", e)
             ReflectionExplorer.instances.add(ErrorInstance("Failed collecting ActivityThread instances: ${e.message}", e))
@@ -106,22 +138,6 @@ object InstanceProvider {
                 ?.getObject("mChildren")
                 ?.cast<List<*>>()
                 ?.map { Instance(it!!, it.objectHelper().getObject("mName").toString(), Group("Observers", null)) }
-                ?.let(ReflectionExplorer.instances::addAll)
-        }
-
-        // Probe ActivityManagerService -> mRegisteredReceivers (HashMap<IBinder, ReceiverList<BroadcastFilter>>)
-        runCollector("registered receivers (ActivityManagerService)") {
-            ServiceManager.getService("activity")!!
-                // Return if not system_server
-                .also { if(it.javaClass.name == "android.os.BinderProxy") return@runCollector }
-                .objectHelper()
-                .getObject("mRegisteredReceivers")
-                ?.cast<Map<*, *>>()
-                ?.filter { it.key != null && it.key!!.javaClass.name != "android.os.BinderProxy" }
-                ?.map { it.key?.objectHelper()?.getObject("mDispatcher") as WeakReference<*> }
-                ?.mapNotNull { it.get() }
-                ?.mapNotNull { it.objectHelper().getObject("mReceiver") }
-                ?.map { Instance(it, it.javaClass.simpleName, Group("Receivers", null)) }
                 ?.let(ReflectionExplorer.instances::addAll)
         }
 
