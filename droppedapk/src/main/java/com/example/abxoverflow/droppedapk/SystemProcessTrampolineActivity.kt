@@ -9,16 +9,16 @@ import android.os.Process
 import android.util.Log
 import com.example.abxoverflow.droppedapk.process.ProcessActivityLauncher
 import com.example.abxoverflow.droppedapk.process.ProcessLocator
+import com.example.abxoverflow.droppedapk.utils.getParcelableExtraCompat
 import com.example.abxoverflow.droppedapk.utils.toast
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlin.collections.sortedBy
 
 class SystemProcessTrampolineActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         @SuppressLint("UnsafeIntentLaunch")
-        val intent = intent.getParcelableExtra<Intent?>(EXTRA_TARGET_INTENT)
+        val intent = intent.getParcelableExtraCompat<Intent>(EXTRA_TARGET_INTENT)
         val explicitProcess = getIntent().getStringExtra(EXTRA_EXPLICIT_PROCESS)
         val selectProcess = getIntent().getBooleanExtra(EXTRA_SELECT_PROCESS, false)
 

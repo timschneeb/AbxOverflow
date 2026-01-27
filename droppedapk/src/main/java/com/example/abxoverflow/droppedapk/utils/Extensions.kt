@@ -4,6 +4,9 @@ package com.example.abxoverflow.droppedapk.utils
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import android.os.Build
+import android.os.Parcelable
 import android.text.Editable
 import android.text.InputType
 import android.util.Log
@@ -124,4 +127,13 @@ fun Context.unwrapContext(): Context {
     }
 
     return context
+}
+
+inline fun <reified T : Parcelable> Intent.getParcelableExtraCompat(key: String): T? {
+    return if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableExtra(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableExtra(key)
+    }
 }
