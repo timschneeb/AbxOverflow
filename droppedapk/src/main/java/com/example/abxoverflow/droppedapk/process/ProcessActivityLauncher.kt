@@ -9,13 +9,11 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.os.Process
 import android.os.ServiceManager
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 
 object ProcessActivityLauncher {
-    const val EXTRA_EXPLICIT_PROCESS: String =
-        "com.example.abxoverflow.droppedapk.EXTRA_EXPLICIT_PROCESS"
-
     private val aMS: IBinder
         get() = ServiceManager.getService("activity")
 
