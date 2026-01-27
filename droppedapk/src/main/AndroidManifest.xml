@@ -39,7 +39,17 @@
         </activity>
 
         <receiver
-            android:name=".LaunchReceiver"
+            android:name=".receiver.SystemServerBootReceiver"
+            android:process="system"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.SystemAppBootReceiver"
+            android:process="com.android.settings"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

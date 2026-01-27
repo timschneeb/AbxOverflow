@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         ReflectionExplorer.activityLauncher = IActivityLauncher(::startActivityWithProcess)
 
         // Apply various runtime modifications
-        Mods.runAll()
+        Mods.runAllSystemServer()
 
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater).also { setContentView(it.root) }

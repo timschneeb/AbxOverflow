@@ -1,8 +1,14 @@
 package com.example.abxoverflow.droppedapk
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.ServiceManager
 import android.util.Log
+import com.example.abxoverflow.droppedapk.utils.readToString
+import com.example.abxoverflow.droppedapk.utils.toast
+import java.io.File
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.Objects
@@ -12,8 +18,46 @@ import java.util.function.BiFunction
 object Mods {
     private const val TAG = "DroppedAPK_Mods"
 
-    fun runAll() {
+    fun runAllSystemServer() {
         enablePermissionManagerDelegate()
+    }
+
+    /**
+     * Finds the path to the Shizuku starter binary.
+     * Throws PackageManager.NameNotFoundException if Shizuku is not installed.
+     */
+    fun findShizukuStarterPath(context: Context): String? {
+        // Get base directory from apk path
+        val info: ApplicationInfo =
+            context.packageManager.getApplicationInfo("moe.shizuku.privileged.api", 0)
+        val path = info.sourceDir
+            .substring(0, info.sourceDir.lastIndexOf('/'))
+            .let { dir ->
+                "$dir/lib/arm64/libshizuku.so"
+            }
+
+        if(File(path).exists())
+            return path
+        return null
+    }
+
+    fun startShizuku(context: Context) {
+        try {
+            findShizukuStarterPath(context).let { starter ->
+                Runtime.getRuntime().exec(starter).run {
+                    // Implicitly logs output
+                    inputStream.readToString(false)
+                    errorStream.readToString(true)
+                }
+            }
+
+            context.toast("Shizuku launched")
+        } catch (_: PackageManager.NameNotFoundException) {
+            // Ignored
+        } catch (e: Exception) {
+            context.toast("Exception while starting Shizuku")
+            Log.e(TAG, "Failed to start Shizuku", e)
+        }
     }
 
     fun enablePermissionManagerDelegate() {

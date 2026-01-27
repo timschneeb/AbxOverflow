@@ -2,6 +2,7 @@ package com.example.abxoverflow.droppedapk
 
 import android.app.ActivityThread
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
@@ -10,7 +11,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
@@ -31,90 +31,125 @@ class RootFragment : Fragment() {
     private lateinit var binding: FragmentMainBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentMainBinding.inflate(inflater, container, false).apply {
-            appText.text = getInfoString()
+        return FragmentMainBinding.inflate(inflater, container, false)
+            .also { binding = it }
+            .apply {
+                appText.text = getInfoString()
 
-            btnShell.setOnClickListener {
-                requireContext().showInputAlert(
-                    layoutInflater,
-                    "Run command",
-                    "Shell command",
-                ) {
-                    try {
-                        val process = Runtime.getRuntime().exec(it)
-                        val out = process.inputStream.readToString(false)
-                        val err = process.errorStream.readToString(true)
+                btnShell.setOnClickListener {
+                    requireContext().showInputAlert(
+                        layoutInflater,
+                        "Run command",
+                        "Shell command",
+                    ) {
+                        try {
+                            val process = Runtime.getRuntime().exec(it)
+                            val out = process.inputStream.readToString(false)
+                            val err = process.errorStream.readToString(true)
 
-                        requireContext().showAlert("Result", out + "\n" + err)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to start shell", e)
+                            requireContext().showAlert("Result", out + "\n" + err)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to start shell", e)
 
-                        val sw = StringWriter()
-                        val pw = PrintWriter(sw)
-                        e.printStackTrace(pw)
-                        requireContext().showAlert("Error", sw.toString())
+                            val sw = StringWriter()
+                            val pw = PrintWriter(sw)
+                            e.printStackTrace(pw)
+                            requireContext().showAlert("Error", sw.toString())
+                        }
                     }
                 }
-            }
 
-            btnInspect.setOnClickListener { _ ->
-                Log.e(TAG, "Launching Reflection Explorer into current process")
-                ReflectionExplorer.instancesProvider = InstanceProvider
-                launch(requireContext())
-            }
+                btnInspect.setOnClickListener { _ ->
+                    Log.e(TAG, "Launching Reflection Explorer into current process")
+                    ReflectionExplorer.instancesProvider = InstanceProvider
+                    launch(requireContext())
+                }
 
-            updateInternalDexButtonText(btnInternalDex)
-            btnInternalDex.setOnClickListener { v: View ->
-                try {
-                    val enabled = Mods.forcedInternalDexScreenModeEnabled
-                    Mods.forcedInternalDexScreenModeEnabled = !enabled
+                updateShizukuButton()
+                btnShizuku.setOnClickListener {
+                    Mods.startShizuku(requireContext())
+                }
 
-                    if (!enabled) {
-                        // Turning on... give some time for DEX to initialize
-                        btnInternalDex.setEnabled(false)
-                        btnInternalDex.text = "Starting internal Samsung DEX screen..."
-                        v.postDelayed({
-                            btnInternalDex.setEnabled(true)
-                            Mods.setDexExternalMouseConnected(true)
-                            updateInternalDexButtonText(btnInternalDex)
-                        }, 3000)
-                    } else {
-                        // Turning off...
-                        updateInternalDexButtonText(btnInternalDex)
+                updateInternalDexButtonText()
+                btnInternalDex.setOnClickListener { v: View ->
+                    try {
+                        val enabled = Mods.forcedInternalDexScreenModeEnabled
+                        Mods.forcedInternalDexScreenModeEnabled = !enabled
+
+                        if (!enabled) {
+                            // Turning on... give some time for DEX to initialize
+                            btnInternalDex.setEnabled(false)
+                            btnInternalDex.text = "Starting internal Samsung DEX screen..."
+                            v.postDelayed({
+                                btnInternalDex.setEnabled(true)
+                                Mods.setDexExternalMouseConnected(true)
+                                updateInternalDexButtonText()
+                            }, 3000)
+                        } else {
+                            // Turning off...
+                            updateInternalDexButtonText()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to start/stop internal dex", e)
+                        requireContext().toast(
+                            "Failed to start/stop internal DEX screen: " + e + " (" + e.message + ")",
+                        )
                     }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to start/stop internal dex", e)
-                    requireContext().toast(
-                        "Failed to start/stop internal DEX screen: " + e + " (" + e.message + ")",
+                }
+
+                btnSwitchProcess.setOnClickListener { _: View? ->
+                    startActivity(
+                        Intent(requireContext(), SystemProcessTrampolineActivity::class.java)
+                            .putExtra(EXTRA_SELECT_PROCESS, true)
+                            .putExtra(
+                                EXTRA_TARGET_INTENT,
+                                Intent(requireContext(), MainActivity::class.java)
+                            )
                     )
                 }
+            }.run {
+                root
             }
-
-            btnSwitchProcess.setOnClickListener { _: View? ->
-                startActivity(
-                    Intent(requireContext(), SystemProcessTrampolineActivity::class.java)
-                        .putExtra(EXTRA_SELECT_PROCESS, true)
-                        .putExtra(
-                            EXTRA_TARGET_INTENT,
-                            Intent(requireContext(), MainActivity::class.java)
-                        )
-                )
-            }
-        }.run {
-            also { binding = it }
-            root
-        }
     }
 
-    private fun updateInternalDexButtonText(btn: Button) = try {
-        btn.text = if (Mods.forcedInternalDexScreenModeEnabled)
-            "Stop internal Samsung DEX screen (ID=${Mods.dexDisplayId})"
-        else
-            "Start internal Samsung DEX screen"
-    } catch (e: Exception) {
-        Log.e(TAG, "updateInternalDexButtonText: ", e)
-        btn.text = "Internal Samsung DEX screen unsupported"
-        btn.isEnabled = false
+    override fun onResume() {
+        super.onResume()
+        updateShizukuButton()
+        updateInternalDexButtonText()
+    }
+
+    private fun updateShizukuButton() {
+        binding.btnShizuku.apply {
+            try {
+                val noStarter = Mods.findShizukuStarterPath(requireContext()) == null
+                text = if (noStarter) "libshizuku.so not found or missing permission"
+                else "Start Shizuku in current process"
+                isEnabled = !noStarter
+            }
+            catch (_: PackageManager.NameNotFoundException) {
+                text = "Shizuku not installed"
+                isEnabled = false
+            }
+            catch (e: Exception) {
+                Log.e(TAG, "updateShizukuButton: ", e)
+                text = "Error while locating Shizuku starter"
+                isEnabled = false
+            }
+        }
+
+    }
+
+    private fun updateInternalDexButtonText() = binding.btnInternalDex.apply {
+        try {
+            text = if (Mods.forcedInternalDexScreenModeEnabled)
+                "Stop internal Samsung DEX screen (ID=${Mods.dexDisplayId})"
+            else
+                "Start internal Samsung DEX screen"
+        } catch (e: Exception) {
+            Log.e(TAG, "updateInternalDexButtonText: ", e)
+            text = "Internal Samsung DEX screen unsupported"
+            isEnabled = false
+        }
     }
 
     private val currentProcessName: String?

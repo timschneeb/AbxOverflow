@@ -25,6 +25,12 @@
             android:text="Inspect" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_shizuku"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Shizuku in current process" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_internal_dex"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
