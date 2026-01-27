@@ -64,6 +64,7 @@ object InstanceProvider {
                     .objectHelper()
                     .getObject("mAllApplications")!!
                     .cast<List<Application>>()
+                    .filter { it.packageName != BuildConfig.APPLICATION_ID }
                     .map { obj -> Instance(obj, obj.javaClass.simpleName, Group("Applications", null)) }
                     .let(ReflectionExplorer.instances::addAll)
             }
