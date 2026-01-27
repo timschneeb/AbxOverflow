@@ -14,6 +14,7 @@ import me.timschneeberger.reflectionexplorer.Instance
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.utils.cast
 import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames.additionalDexSearchPaths
+import java.lang.ref.WeakReference
 
 object InstanceProvider {
     private const val TAG = "DroppedAPK_InstanceProvider"
@@ -92,6 +93,36 @@ object InstanceProvider {
         } catch (e: Exception) {
             Log.w(TAG, "Failed collecting ActivityThread instances", e)
             ReflectionExplorer.instances.add(ErrorInstance("Failed collecting ActivityThread instances: ${e.message}", e))
+        }
+
+        // Probe ContentService -> mRootNode -> mChildren (ObserverNode list)
+        runCollector("observers (ContentService)") {
+            ServiceManager.getService("content")!!
+                // Return if not system_server
+                .also { if(it.javaClass.name == "android.os.BinderProxy") return@runCollector }
+                .objectHelper()
+                .getObject("mRootNode")
+                ?.objectHelper()
+                ?.getObject("mChildren")
+                ?.cast<List<*>>()
+                ?.map { Instance(it!!, it.objectHelper().getObject("mName").toString(), Group("Observers", null)) }
+                ?.let(ReflectionExplorer.instances::addAll)
+        }
+
+        // Probe ActivityManagerService -> mRegisteredReceivers (HashMap<IBinder, ReceiverList<BroadcastFilter>>)
+        runCollector("registered receivers (ActivityManagerService)") {
+            ServiceManager.getService("activity")!!
+                // Return if not system_server
+                .also { if(it.javaClass.name == "android.os.BinderProxy") return@runCollector }
+                .objectHelper()
+                .getObject("mRegisteredReceivers")
+                ?.cast<Map<*, *>>()
+                ?.filter { it.key != null && it.key!!.javaClass.name != "android.os.BinderProxy" }
+                ?.map { it.key?.objectHelper()?.getObject("mDispatcher") as WeakReference<*> }
+                ?.mapNotNull { it.get() }
+                ?.mapNotNull { it.objectHelper().getObject("mReceiver") }
+                ?.map { Instance(it, it.javaClass.simpleName, Group("Receivers", null)) }
+                ?.let(ReflectionExplorer.instances::addAll)
         }
 
         // Get all system services hosted in this process
