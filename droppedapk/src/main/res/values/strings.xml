@@ -1,3 +1,41 @@
 <resources>
     <string name="app_name">System App</string>
+
+    <string name="shell_run_title">Run shell command</string>
+    <string name="shell_run_subtitle">Execute arbitrary shell command and show stdout/stderr</string>
+    <string name="shell_command">Shell command</string>
+    <string name="error">Error</string>
+    <string name="error_template">Error: %1$s (%2$s)</string>
+    <string name="result">Result</string>
+    <string name="frida_gadget_load_failed">Failed to load frida-gadget-android library: %1$s</string>
+
+    <string name="reflection_explorer_title">Reflection Explorer</string>
+    <string name="reflection_explorer_subtitle">Inspect current process using Java reflection</string>
+
+    <string name="shizuku_title">Start Shizuku</string>
+    <string name="shizuku_subtitle">Launch Shizuku in current process</string>
+    <string name="shizuku_no_starter">libshizuku.so not found or incorrect file permission. Is the Shizuku-SystemUID fork installed?</string>
+    <string name="shizuku_not_installed">Shizuku not installed</string>
+    <string name="shizuku_error_find_starter">Error while locating Shizuku starter (%1$s)</string>
+
+    <string name="internal_dex_screen_title">Internal Samsung DEX screen</string>
+    <string name="internal_dex_screen_subtitle">Start/stop a virtual Samsung DEX display</string>
+    <string name="internal_dex_screen_subtitle_on">Running on display id %1$d. Connect using scrcpy via ADB</string>
+    <string name="internal_dex_screen_unsupported">Internal Samsung DEX screen unsupported</string>
+    <string name="internal_dex_screen_error">Failed to start/stop internal DEX screen: %1$s (%2$s)</string>
+
+    <string name="switch_process_title">Switch process</string>
+    <string name="switch_process_subtitle">Start this app in a different process</string>
+    <string name="process_switcher_title">Select process to switch to…</string>
+
+    <string name="pref_category_actions_title">Actions</string>
+    <string name="pref_category_info_title">Info</string>
+
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_confirm">This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?</string>
+    <string name="uninstall_failed">Uninstall failed</string>
+    <string name="internal_dex_screen_not_system_server">Setting only available in system_server process</string>
+    <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
+
+
 </resources>

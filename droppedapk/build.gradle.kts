@@ -57,10 +57,11 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.ezxhelper.core)
+    implementation(libs.androidx.preferences)
 
     implementation(project(":library"))
 
     implementation(libs.refine.runtime)
     compileOnly(project(":droppedapk:hidden-api"))
-}
 
+}

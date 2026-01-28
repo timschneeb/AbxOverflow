@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <androidx.preference.PreferenceCategory
+        android:title="@string/pref_category_actions_title">
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_shell_run"
+            android:icon="@drawable/ic_terminal"
+            android:title="@string/shell_run_title"
+            android:summary="@string/shell_run_subtitle" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_reflection_explorer"
+            android:icon="@drawable/ic_manage_search"
+            android:title="@string/reflection_explorer_title"
+            android:summary="@string/reflection_explorer_subtitle" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_shizuku"
+            android:icon="@drawable/ic_rocket_launch"
+            android:title="@string/shizuku_title"
+            android:summary="@string/shizuku_subtitle" />
+
+        <com.example.abxoverflow.droppedapk.MaterialSwitchPreference
+            android:key="@string/pref_key_internal_dex"
+            android:icon="@drawable/ic_cast"
+            android:title="@string/internal_dex_screen_title"
+            android:summary="@string/internal_dex_screen_subtitle" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_switch_process"
+            android:icon="@drawable/ic_swap_horiz"
+            android:title="@string/switch_process_title"
+            android:summary="@string/switch_process_subtitle" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:title="@string/pref_category_info_title">
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_info"
+            android:selectable="false" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_id_info"
+            android:selectable="false" />
+
+    </androidx.preference.PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

@@ -2,11 +2,13 @@
 
 package com.example.abxoverflow.droppedapk.utils
 
+import android.app.ActivityThread
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
 import android.os.Parcelable
+import android.os.Process
 import android.text.Editable
 import android.text.InputType
 import android.util.Log
@@ -15,9 +17,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import com.example.abxoverflow.droppedapk.R
 import com.example.abxoverflow.droppedapk.databinding.DialogTextinputBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.InputStream
+
+val currentProcessName: String
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        Process.myProcessName()
+    } else {
+        ActivityThread.currentProcessName()
+    }
+
+val isSystemServer: Boolean
+    get() = currentProcessName == "system_server"
 
 fun Context.showAlert(@StringRes title: Int, @StringRes message: Int) {
     showAlert(getString(title), getString(message))
@@ -95,6 +108,9 @@ fun Context.toast(message: String, long: Boolean = true) = Toast.makeText(this, 
     if(long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
 
 fun Context.toast(@StringRes message: Int, long: Boolean = true) = toast(getString(message), long)
+
+fun Context.toast(e: Throwable, long: Boolean = true) =
+    toast(getString(R.string.error_template, e, e.message), long)
 
 fun InputStream?.readToString(isError: Boolean): String {
     return this?.bufferedReader()?.use { reader ->

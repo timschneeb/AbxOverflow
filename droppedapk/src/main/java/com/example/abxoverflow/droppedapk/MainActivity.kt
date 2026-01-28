@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                 System.loadLibrary("frida-gadget-android")
             } catch (e: UnsatisfiedLinkError) {
                 Log.e(TAG, "Failed to load frida-gadget-android library", e)
-                toast("Failed to load frida-gadget-android library: ${e.message}")
+                toast(getString(R.string.frida_gadget_load_failed, e.message))
             }
         }
 
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (savedInstanceState == null) {
-            RootFragment().also {
+            PrefsFragment().also {
                 supportFragmentManager.beginTransaction().replace(R.id.container, it).commit()
             }
         }
@@ -84,10 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.uninstall) {
-            showConfirmDialog(
-                title = "Uninstall DroppedAPK",
-                message = "This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?"
-            ) {
+            showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm) {
                 uninstall()
             }
             return true
@@ -126,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             packageManager.packageInstaller.uninstall(packageName, nullArg)
         } catch (e: Exception) {
             e.printStackTrace()
-            toast("Uninstall failed")
+            toast(getString(R.string.uninstall_failed))
         }
     }
 
@@ -162,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Process-aware launch failed", e)
-                context.toast("Error: " + e + " (" + e.message + ")")
+                context.toast(e)
             }
         }
     }

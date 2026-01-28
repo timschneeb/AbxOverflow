@@ -23,7 +23,6 @@ class SystemProcessTrampolineActivity : Activity() {
         val selectProcess = getIntent().getBooleanExtra(EXTRA_SELECT_PROCESS, false)
 
         if (intent == null) {
-            toast("No target intent provided")
             finish()
             return
         }
@@ -41,7 +40,7 @@ class SystemProcessTrampolineActivity : Activity() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Process-aware launch failed", e)
-            toast("Error: " + e + " (" + e.message + ")")
+            toast(e)
             finish()
         }
     }
@@ -52,7 +51,7 @@ class SystemProcessTrampolineActivity : Activity() {
             .toTypedArray()
 
         MaterialAlertDialogBuilder(this)
-            .setTitle("Select process to switch to...")
+            .setTitle(getString(R.string.process_switcher_title))
             .setOnDismissListener { _ -> finish() }
             .setItems(processes) { _: DialogInterface?, which: Int ->
                 try {
@@ -64,7 +63,7 @@ class SystemProcessTrampolineActivity : Activity() {
                     )
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to launch activity in process", e)
-                    toast("Error: $e (${e.message})")
+                    toast(e)
                 }
             }.show()
     }
