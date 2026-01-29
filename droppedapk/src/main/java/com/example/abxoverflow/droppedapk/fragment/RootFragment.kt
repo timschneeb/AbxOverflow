@@ -36,7 +36,6 @@ class RootFragment : BasePreferenceFragment() {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
         shellPref.setOnPreferenceClickListener {
-            // Open the in-app TerminalFragment instead of the input dialog
             parentFragmentManager.beginTransaction()
                 .replace(R.id.container, TerminalFragment())
                 .addToBackStack("terminal")

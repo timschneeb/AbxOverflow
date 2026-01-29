@@ -22,7 +22,7 @@
             android:title="@string/shizuku_title"
             android:summary="@string/shizuku_subtitle" />
 
-        <com.example.abxoverflow.droppedapk.MaterialSwitchPreference
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_internal_dex"
             android:icon="@drawable/ic_cast"
             android:title="@string/internal_dex_screen_title"
