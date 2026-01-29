@@ -12,15 +12,10 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
-import com.example.abxoverflow.droppedapk.utils.readToString
-import com.example.abxoverflow.droppedapk.utils.showAlert
-import com.example.abxoverflow.droppedapk.utils.showInputAlert
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launch
 import java.io.InputStreamReader
-import java.io.PrintWriter
-import java.io.StringWriter
 
 class PrefsFragment : PreferenceFragmentCompat() {
 
@@ -36,26 +31,11 @@ class PrefsFragment : PreferenceFragmentCompat() {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
         shellPref.setOnPreferenceClickListener {
-            requireContext().showInputAlert(
-                layoutInflater,
-                getString(R.string.shell_run_title),
-                getString(R.string.shell_command)
-            ) {
-                try {
-                    val process = Runtime.getRuntime().exec(it)
-                    val out = process.inputStream.readToString(false)
-                    val err = process.errorStream.readToString(true)
-
-                    requireContext().showAlert(getString(R.string.result), out + "\n" + err)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to start shell", e)
-
-                    val sw = StringWriter()
-                    val pw = PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    requireContext().showAlert(getString(R.string.error), sw.toString())
-                }
-            }
+            // Open the in-app TerminalFragment instead of the input dialog
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.container, TerminalFragment())
+                .addToBackStack("terminal")
+                .commit()
             true
         }
 

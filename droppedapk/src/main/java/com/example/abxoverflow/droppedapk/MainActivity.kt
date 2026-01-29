@@ -82,12 +82,48 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val result = super.onPrepareOptionsMenu(menu)
+        val frag = supportFragmentManager.findFragmentById(R.id.container)
+        val isTerminal = frag is TerminalFragment
+        menu?.findItem(R.id.action_kill)?.isVisible = isTerminal
+        menu?.findItem(R.id.action_clear)?.isVisible = isTerminal
+        menu?.findItem(R.id.uninstall)?.isVisible = !isTerminal
+        menu?.findItem(R.id.action_toggle_wrap)?.isVisible = isTerminal
+        // Update wrap toggle checked state based on current state
+        if (isTerminal) {
+            menu?.findItem(R.id.action_toggle_wrap)?.isChecked = frag.isWrapEnabled()
+        }
+        return result
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.uninstall) {
-            showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm) {
-                uninstall()
-            }
+        // Handle the action bar Up/Home button explicitly so it always navigates back
+        if (item.itemId == android.R.id.home) {
+            onBackPressedDispatcher.onBackPressed()
             return true
+        }
+        when (item.itemId) {
+            R.id.action_toggle_wrap -> {
+                val tf = supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment ?: return true
+                val newState = tf.toggleWrap()
+                item.isChecked = newState
+                return true
+            }
+            R.id.action_kill -> {
+                (supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment)?.killProcess()
+                return true
+            }
+            R.id.action_clear -> {
+                (supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment)?.clearOutput()
+                return true
+            }
+            R.id.uninstall -> {
+                showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm) {
+                    uninstall()
+                }
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }

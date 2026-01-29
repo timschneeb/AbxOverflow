@@ -37,5 +37,13 @@
     <string name="internal_dex_screen_not_system_server">Setting only available in system_server process</string>
     <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
 
+    <string name="action_kill">Kill</string>
+    <string name="action_clear">Clear</string>
+    <string name="history_up">History up</string>
+    <string name="history_down">History down</string>
+    <string name="enter_command">Enter command</string>
+    <string name="run">Run</string>
+    <string name="action_wrap">Word wrap</string>
+
 
 </resources>

@@ -27,6 +27,10 @@
 * Needs resource overlay to add XML file to res/xml (check if possible)
 
 ## Other ideas
+* /data/misc: https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/private/system_server.te;l=649?q=system_server
+* https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/contexts/file_contexts_test_data?
+* /data/server_configurable_flags & /data/server_configurable_flags/test
+* com.android.providers.settings/databases/settings.db
 * Possibly inject custom audio effects library?
 * Disable built-in (always-on) effects?
   * Ref: https://github.com/Magisk-Modules-Alt-Repo/audio-misc-settings/blob/master/service.sh
