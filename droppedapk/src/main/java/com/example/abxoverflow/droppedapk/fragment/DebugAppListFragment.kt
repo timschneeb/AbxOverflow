@@ -30,13 +30,13 @@ import java.util.concurrent.Executors
  * System-only fragment that lists installed packages and allows toggling debug/run-as state
  * via reflection into the package manager service. Only available when running in system_server.
  */
-class SystemAppListFragment : Fragment() {
+class DebugAppListFragment : Fragment() {
     private lateinit var adapter: PackageAdapter
     private val loader = Executors.newSingleThreadExecutor()
     private var pkgsLoaded = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_system_app_list, container, false)
+        return inflater.inflate(R.layout.fragment_debug_app_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -66,7 +66,7 @@ class SystemAppListFragment : Fragment() {
                     recycler.apply {
                         layoutManager = LinearLayoutManager(requireContext())
                         adapter = PackageAdapter(requireContext(), list.toMutableList()).also {
-                            adapter = it
+                            this@DebugAppListFragment.adapter = it
                         }
                         addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
                         visibility = View.VISIBLE
@@ -78,7 +78,7 @@ class SystemAppListFragment : Fragment() {
                 activity?.runOnUiThread {
                     activity?.onBackPressedDispatcher?.onBackPressed()
                     // show an alert with the error
-                    context?.showAlert(getString(R.string.update_failed), e.toString())
+                    context?.showAlert(getString(R.string.debug_app_update_failed), e.toString())
                 }
             }
         }
@@ -87,10 +87,10 @@ class SystemAppListFragment : Fragment() {
         // TODO: this seems a bit broken
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
-                menuInflater.inflate(R.menu.menu_system_app_list, menu)
+                menuInflater.inflate(R.menu.menu_debug_app_list, menu)
                 val searchItem = menu.findItem(R.id.action_search)
                 val sv = searchItem?.actionView as? androidx.appcompat.widget.SearchView
-                sv?.queryHint = getString(R.string.enter_command)
+                sv?.queryHint = getString(R.string.shell_enter_command)
                 sv?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String?): Boolean = true
                     override fun onQueryTextChange(newText: String?): Boolean {
@@ -125,6 +125,7 @@ class SystemAppListFragment : Fragment() {
             holder.binding.apply {
                 pkgLabel.text = label
                 pkgName.text = pkg
+                // TODO: async query!
                 pkgStatus.text = queryPackageStatus(pkg)
 
                 // Set app icon
@@ -169,7 +170,7 @@ class SystemAppListFragment : Fragment() {
         private fun showActionsForPackage(anchor: View, pkg: String) {
             PopupMenu(ctx, anchor).run {
                 gravity = Gravity.END
-                menuInflater.inflate(R.menu.menu_package_actions, menu)
+                menuInflater.inflate(R.menu.menu_debug_app_actions, menu)
                 setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
                         R.id.action_off -> applyPackageMode(pkg, PackageMode.OFF)
@@ -185,13 +186,13 @@ class SystemAppListFragment : Fragment() {
         private fun applyPackageMode(pkg: String, mode: PackageMode) {
             try {
                 setPackageModeReflection(pkg, mode)
-                Toast.makeText(ctx, getString(R.string.updated_package, pkg, mode.name), Toast.LENGTH_SHORT).show()
                 notifyDataSetChanged()
             } catch (e: Exception) {
-                ctx.showAlert(getString(R.string.update_failed), e.toString())
+                ctx.showAlert(getString(R.string.debug_app_update_failed), e.toString())
             }
         }
 
+        // TODO
         private fun queryPackageStatus(pkg: String): String {
             try {
                 val svc = android.os.ServiceManager.getService("package") ?: return "???"
@@ -221,6 +222,7 @@ class SystemAppListFragment : Fragment() {
 
     enum class PackageMode { OFF, RUN_AS, DEBUGGABLE }
 
+    // TODO
     private fun setPackageModeReflection(pkgName: String, mode: PackageMode): Boolean {
         try {
             val svc = android.os.ServiceManager.getService("package") ?: return false

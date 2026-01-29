@@ -5,11 +5,16 @@ import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
+import com.example.abxoverflow.droppedapk.R
 import com.example.abxoverflow.droppedapk.databinding.FragmentTerminalBinding
 import com.example.abxoverflow.droppedapk.terminal.InternalShell
 import com.example.abxoverflow.droppedapk.terminal.LocalShell
@@ -132,6 +137,32 @@ class TerminalFragment : BaseFragment() {
         // After restoring output, keep scrolled to bottom and place cursor at end of input
         binding.terminalScroll.post { binding.terminalScroll.fullScroll(View.FOCUS_DOWN) }
         binding.terminalInput.setSelection(binding.terminalInput.text?.length ?: 0)
+
+        // Provide action bar menu items for terminal (clear / kill / wrap)
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
+                menuInflater.inflate(R.menu.menu_terminal, menu)
+                // initialize wrap checked state
+                menu.findItem(R.id.action_toggle_wrap)?.isChecked = wrapEnabled
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                when (menuItem.itemId) {
+                    R.id.action_clear -> {
+                        clearOutput(); return true
+                    }
+                    R.id.action_kill -> {
+                        killProcess(); return true
+                    }
+                    R.id.action_toggle_wrap -> {
+                        wrapEnabled = !wrapEnabled
+                        menuItem.isChecked = wrapEnabled
+                        return true
+                    }
+                }
+                return false
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     private fun onSend() {
@@ -148,7 +179,7 @@ class TerminalFragment : BaseFragment() {
         printInput(cmd)
 
         // Choose shell implementation: internal for system_server or for builtins, otherwise sh -c in cwd.
-        val first = TerminalShell.Companion.splitArgs(cmd).firstOrNull() ?: ""
+        val first = TerminalShell.splitArgs(cmd).firstOrNull() ?: ""
         val isBuiltin = first == "cd" || first == "pwd"
 
         io.execute {

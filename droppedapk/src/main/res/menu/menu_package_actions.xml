@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_off" android:title="@string/action_off" />
-    <item android:id="@+id/action_run_as" android:title="@string/action_run_as" />
-    <item android:id="@+id/action_debuggable" android:title="@string/action_debuggable" />
-</menu>

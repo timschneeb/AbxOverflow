@@ -5,24 +5,19 @@
     <item
         android:id="@+id/action_clear"
         android:icon="@drawable/ic_delete_history"
-        android:title="@string/action_clear"
+        android:title="@string/shell_action_clear"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_kill"
         android:icon="@drawable/ic_tab_close_inactive"
-        android:title="@string/action_kill"
+        android:title="@string/shell_action_kill"
         app:showAsAction="never" />
-
 
     <item
         android:id="@+id/action_toggle_wrap"
-        android:title="@string/action_wrap"
+        android:title="@string/shell_action_wrap"
         android:checkable="true"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/uninstall"
-        android:title="@string/uninstall"
-        app:showAsAction="never" />
 </menu>

@@ -1,14 +1,10 @@
 package com.example.abxoverflow.droppedapk
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.IntentSender
 import android.os.Bundle
-import android.os.ServiceManager
 import android.util.Log
-import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
@@ -20,9 +16,9 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
 import com.example.abxoverflow.droppedapk.fragment.RootFragment
+import com.example.abxoverflow.droppedapk.fragment.DebugAppListFragment
 import com.example.abxoverflow.droppedapk.fragment.TerminalFragment
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
-import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.IActivityLauncher
@@ -76,7 +72,6 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.backStackEntryCount > 0
             )
 
-            invalidateOptionsMenu()
             updateActionBarTitle()
         }
 
@@ -87,28 +82,10 @@ class MainActivity : AppCompatActivity() {
         val frag = supportFragmentManager.findFragmentById(R.id.container)
         val title = when (frag) {
             is TerminalFragment -> getString(R.string.shell_terminal)
+            is DebugAppListFragment -> getString(R.string.debug_app_list_title)
             else -> "${getString(R.string.app_name)} ($currentProcessName)"
         }
         supportActionBar?.title = title
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        val result = super.onPrepareOptionsMenu(menu)
-        val frag = supportFragmentManager.findFragmentById(R.id.container)
-        val isTerminal = frag is TerminalFragment
-        menu?.findItem(R.id.action_kill)?.isVisible = isTerminal
-        menu?.findItem(R.id.action_clear)?.isVisible = isTerminal
-        menu?.findItem(R.id.uninstall)?.isVisible = !isTerminal
-        menu?.findItem(R.id.action_toggle_wrap)?.isVisible = isTerminal
-        if (isTerminal) {
-            menu?.findItem(R.id.action_toggle_wrap)?.isChecked = frag.wrapEnabled
-        }
-        return result
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -117,65 +94,7 @@ class MainActivity : AppCompatActivity() {
             onBackPressedDispatcher.onBackPressed()
             return true
         }
-        when (item.itemId) {
-            R.id.action_toggle_wrap -> {
-                val tf = supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment
-                    ?: return true
-                tf.wrapEnabled = !tf.wrapEnabled
-                item.isChecked = tf.wrapEnabled
-                return true
-            }
-            R.id.action_kill -> {
-                (supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment)?.killProcess()
-                return true
-            }
-            R.id.action_clear -> {
-                (supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment)?.clearOutput()
-                return true
-            }
-            R.id.uninstall -> {
-                showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm) {
-                    uninstall()
-                }
-                return true
-            }
-        }
         return super.onOptionsItemSelected(item)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun uninstall() {
-        try {
-            // Delete <pastSigs> by directly editing PackageManagerService state within system_server
-            // ServiceManager.getService("package").this$0.mSettings.mSharedUsers.get("android.uid.system").getSigningDetails().mPastSigningCertificates = null
-            val packManImplService: Any = ServiceManager.getService("package")
-            val packManService = packManImplService.javaClass.getDeclaredField("this$0").run {
-                isAccessible = true
-                get(packManImplService)
-            }
-
-            val settings = packManService.javaClass.getDeclaredField("mSettings").run {
-                isAccessible = true
-                get(packManService)
-            }
-            val sharedUser = settings.javaClass.getDeclaredField("mSharedUsers").run {
-                isAccessible = true
-                (get(settings) as MutableMap<*, *>)["android.uid.system"]!!
-            }
-
-            val signingDetails = sharedUser.javaClass.getMethod("getSigningDetails").invoke(sharedUser)
-            signingDetails.javaClass.getDeclaredField("mPastSigningCertificates").apply {
-                isAccessible = true
-                set(signingDetails, null)
-            }
-
-            // Uninstall this app (also triggers write of fixed packages.xml)
-            val nullArg: IntentSender = null!!
-            packageManager.packageInstaller.uninstall(packageName, nullArg)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            toast(getString(R.string.uninstall_failed))
-        }
     }
 
     override fun onDestroy() {

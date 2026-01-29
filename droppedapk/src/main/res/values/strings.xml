@@ -1,13 +1,27 @@
 <resources>
     <string name="app_name">System App</string>
 
-    <string name="shell_run_title">Run shell command</string>
-    <string name="shell_run_subtitle">Execute arbitrary shell command and show stdout/stderr</string>
-    <string name="shell_terminal">Terminal</string>
     <string name="error">Error</string>
     <string name="error_template">Error: %1$s (%2$s)</string>
     <string name="result">Result</string>
     <string name="frida_gadget_load_failed">Failed to load frida-gadget-android library: %1$s</string>
+    <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
+    <string name="system_server_only_feature">This feature is only available when running within system_server</string>
+
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_confirm">This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?</string>
+    <string name="uninstall_failed">Uninstall failed</string>
+
+    <string name="shell_run_title">Run shell command</string>
+    <string name="shell_run_subtitle">Execute arbitrary shell command and show stdout/stderr</string>
+    <string name="shell_terminal">Terminal</string>
+    <string name="shell_history_up">History up</string>
+    <string name="shell_history_down">History down</string>
+    <string name="shell_enter_command">Enter command</string>
+    <string name="shell_run">Run</string>
+    <string name="shell_action_wrap">Word wrap</string>
+    <string name="shell_action_kill">Kill</string>
+    <string name="shell_action_clear">Clear</string>
 
     <string name="reflection_explorer_title">Reflection Explorer</string>
     <string name="reflection_explorer_subtitle">Inspect current process using Java reflection</string>
@@ -28,32 +42,14 @@
     <string name="switch_process_subtitle">Start this app in a different process</string>
     <string name="process_switcher_title">Select process to switch to…</string>
 
-    <string name="settings_title">Settings</string>
-
     <string name="pref_category_actions_title">Actions</string>
     <string name="pref_category_info_title">Info</string>
 
-    <string name="uninstall">Uninstall</string>
-    <string name="uninstall_confirm">This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?</string>
-    <string name="uninstall_failed">Uninstall failed</string>
-    <string name="internal_dex_screen_not_system_server">Setting only available in system_server process</string>
-    <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
-
-    <string name="action_kill">Kill</string>
-    <string name="action_clear">Clear</string>
-    <string name="system_only_feature">This feature is only available when running in system_server.</string>
-    <string name="action_off">Off</string>
-    <string name="action_run_as">Run-as</string>
-    <string name="action_debuggable">Debuggable</string>
-    <string name="updated_package">Updated %1$s to %2$s</string>
-    <string name="update_failed">Failed to update</string>
-    <string name="system_app_list_title">System app list</string>
-    <string name="system_app_list_subtitle">List and modify package debug/run-as state (system only)</string>
-    <string name="history_up">History up</string>
-    <string name="history_down">History down</string>
-    <string name="enter_command">Enter command</string>
-    <string name="run">Run</string>
-    <string name="action_wrap">Word wrap</string>
-
+    <string name="debug_app_action_off">Off</string>
+    <string name="debug_app_action_run_as">Run-as</string>
+    <string name="debug_app_action_debuggable">Debuggable</string>
+    <string name="debug_app_update_failed">Failed to update</string>
+    <string name="debug_app_list_title">System app list</string>
+    <string name="debug_app_list_subtitle">List and modify package debug/run-as state (system only)</string>
 
 </resources>

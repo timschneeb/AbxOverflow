@@ -1,10 +1,17 @@
 package com.example.abxoverflow.droppedapk.fragment
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Process
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import androidx.preference.Preference
 import com.example.abxoverflow.droppedapk.InstanceProvider
 import com.example.abxoverflow.droppedapk.MainActivity
@@ -17,6 +24,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
+import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launch
@@ -29,7 +37,7 @@ class RootFragment : BasePreferenceFragment() {
     private val shizukuPref: Preference by lazy { findPreference(getString(R.string.pref_key_shizuku))!! }
     private val dexPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_internal_dex))!! }
     private val switchPref: Preference by lazy { findPreference(getString(R.string.pref_key_switch_process))!! }
-    private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_system_app_list))!! }
+    private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_debug_app_list))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
 
@@ -94,19 +102,19 @@ class RootFragment : BasePreferenceFragment() {
         systemListPref.apply {
             setOnPreferenceClickListener {
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, SystemAppListFragment())
+                    .replace(R.id.container, DebugAppListFragment())
                     .addToBackStack("system_app_list")
                     .commit()
                 true
             }
 
             if (!isSystemServer) {
-                title = getString(R.string.system_app_list_title)
-                summary = getString(R.string.system_only_feature)
+                title = getString(R.string.debug_app_list_title)
+                summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
             } else {
-                title = getString(R.string.system_app_list_title)
-                summary = getString(R.string.system_app_list_subtitle)
+                title = getString(R.string.debug_app_list_title)
+                summary = getString(R.string.debug_app_list_subtitle)
                 isEnabled = true
             }
         }
@@ -115,6 +123,24 @@ class RootFragment : BasePreferenceFragment() {
         refreshInfo()
         refreshShizukuPref()
         refreshDexPref()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
+                menuInflater.inflate(R.menu.menu_root, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                if (menuItem.itemId == R.id.uninstall) {
+                    context?.showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm, onConfirm = ::performUninstall)
+                    return true
+                }
+                return false
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     override fun onResume() {
@@ -154,7 +180,7 @@ class RootFragment : BasePreferenceFragment() {
     private fun refreshDexPref() {
         dexPref.apply {
             if(!isSystemServer) {
-                summary = getString(R.string.internal_dex_screen_not_system_server)
+                summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
                 isChecked = false
                 return@apply
@@ -189,6 +215,40 @@ class RootFragment : BasePreferenceFragment() {
                 .readLines()
                 .joinToString("\n")
         }.getOrElse(Throwable::stackTraceToString)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun performUninstall() {
+        try {
+            val packManImplService: Any = android.os.ServiceManager.getService("package")
+            val packManService = packManImplService.javaClass.getDeclaredField("this$0").run {
+                isAccessible = true
+                get(packManImplService)
+            }
+
+            val settings = packManService.javaClass.getDeclaredField("mSettings").run {
+                isAccessible = true
+                get(packManService)
+            }
+            val sharedUser = settings.javaClass.getDeclaredField("mSharedUsers").run {
+                isAccessible = true
+                (get(settings) as MutableMap<*, *>)["android.uid.system"]!!
+            }
+
+            val signingDetails = sharedUser.javaClass.getMethod("getSigningDetails").invoke(sharedUser)
+            signingDetails.javaClass.getDeclaredField("mPastSigningCertificates").apply {
+                isAccessible = true
+                set(signingDetails, null)
+            }
+
+            val nullArg: IntentSender = null!!
+            requireContext().run {
+                packageManager.packageInstaller.uninstall(packageName, nullArg)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            requireContext().toast(getString(R.string.uninstall_failed))
+        }
     }
 
     companion object {
