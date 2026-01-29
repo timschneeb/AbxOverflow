@@ -255,7 +255,7 @@ class RootFragment : BasePreferenceFragment() {
                 packageManager.packageInstaller.uninstall(packageName, nullArg)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "performUninstall: ", e)
             requireContext().toast(getString(R.string.uninstall_failed))
         }
     }

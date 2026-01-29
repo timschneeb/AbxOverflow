@@ -49,7 +49,7 @@
     <string name="debug_app_action_run_as">Run-as</string>
     <string name="debug_app_action_debuggable">Debuggable</string>
     <string name="debug_app_update_failed">Failed to update</string>
-    <string name="debug_app_list_title">System app list</string>
-    <string name="debug_app_list_subtitle">List and modify package debug/run-as state (system only)</string>
+    <string name="debug_app_list_title">Debuggable apps</string>
+    <string name="debug_app_list_subtitle">List and modify package debug/run-as states</string>
 
 </resources>

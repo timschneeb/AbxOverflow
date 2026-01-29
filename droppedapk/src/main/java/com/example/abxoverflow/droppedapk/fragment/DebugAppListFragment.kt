@@ -2,18 +2,22 @@ package com.example.abxoverflow.droppedapk.fragment
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.ServiceManager
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
-import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -21,8 +25,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.abxoverflow.droppedapk.R
+import com.example.abxoverflow.droppedapk.databinding.FragmentDebugAppListBinding
 import com.example.abxoverflow.droppedapk.databinding.ItemSystemAppBinding
 import com.example.abxoverflow.droppedapk.utils.showAlert
+import io.github.kyuubiran.ezxhelper.core.finder.MethodFinder.`-Static`.methodFinder
+import io.github.kyuubiran.ezxhelper.core.helper.ObjectHelper.`-Static`.objectHelper
+import me.timschneeberger.reflectionexplorer.utils.cast
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -32,22 +40,22 @@ import java.util.concurrent.Executors
  */
 class DebugAppListFragment : Fragment() {
     private lateinit var adapter: PackageAdapter
+    private lateinit var binding: FragmentDebugAppListBinding
+
     private val loader = Executors.newSingleThreadExecutor()
     private var pkgsLoaded = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_debug_app_list, container, false)
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+        FragmentDebugAppListBinding.inflate(inflater, container, false).also {
+            binding = it
+        }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val recycler = view.findViewById<RecyclerView>(R.id.recycler)
-        val progressBar = view.findViewById<ProgressBar>(R.id.progress_bar)
-
         // Load package list off the UI thread and show progress
-        progressBar.visibility = View.VISIBLE
-        recycler.visibility = View.GONE
+        binding.progressBar.visibility = View.VISIBLE
+        binding.recycler.visibility = View.GONE
 
         loader.execute {
             try {
@@ -63,7 +71,7 @@ class DebugAppListFragment : Fragment() {
                     .sortedBy { it.second.lowercase(Locale.getDefault()) }
 
                 activity?.runOnUiThread {
-                    recycler.apply {
+                    binding.recycler.apply {
                         layoutManager = LinearLayoutManager(requireContext())
                         adapter = PackageAdapter(requireContext(), list.toMutableList()).also {
                             this@DebugAppListFragment.adapter = it
@@ -71,7 +79,7 @@ class DebugAppListFragment : Fragment() {
                         addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
                         visibility = View.VISIBLE
                     }
-                    progressBar?.visibility = View.GONE
+                    binding.progressBar.visibility = View.GONE
                     pkgsLoaded = true
                 }
             } catch (e: Exception) {
@@ -83,15 +91,14 @@ class DebugAppListFragment : Fragment() {
             }
         }
 
-        // Register MenuProvider to provide the action bar search (replaces deprecated fragment menu APIs)
-        // TODO: this seems a bit broken
+        // Register MenuProvider to provide the action bar search
         requireActivity().addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_debug_app_list, menu)
                 val searchItem = menu.findItem(R.id.action_search)
-                val sv = searchItem?.actionView as? androidx.appcompat.widget.SearchView
+                val sv = searchItem?.actionView as? SearchView
                 sv?.queryHint = getString(R.string.shell_enter_command)
-                sv?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+                sv?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String?): Boolean = true
                     override fun onQueryTextChange(newText: String?): Boolean {
                         if (pkgsLoaded) adapter.filter.filter(newText)
@@ -100,7 +107,7 @@ class DebugAppListFragment : Fragment() {
                 })
             }
 
-            override fun onMenuItemSelected(menuItem: android.view.MenuItem): Boolean {
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return false
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
@@ -110,6 +117,10 @@ class DebugAppListFragment : Fragment() {
         super.onDestroyView()
         loader.shutdownNow()
     }
+
+    private class VH(val binding: ItemSystemAppBinding) : RecyclerView.ViewHolder(binding.root)
+
+    enum class PackageMode { OFF, RUN_AS, DEBUGGABLE }
 
     private inner class PackageAdapter(val ctx: Context, val data: MutableList<Pair<String, String>>) : RecyclerView.Adapter<VH>(), Filterable {
         private val full = ArrayList<Pair<String,String>>(data)
@@ -125,7 +136,6 @@ class DebugAppListFragment : Fragment() {
             holder.binding.apply {
                 pkgLabel.text = label
                 pkgName.text = pkg
-                // TODO: async query!
                 pkgStatus.text = queryPackageStatus(pkg)
 
                 // Set app icon
@@ -183,111 +193,89 @@ class DebugAppListFragment : Fragment() {
             }
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         private fun applyPackageMode(pkg: String, mode: PackageMode) {
             try {
                 setPackageModeReflection(pkg, mode)
                 notifyDataSetChanged()
             } catch (e: Exception) {
-                ctx.showAlert(getString(R.string.debug_app_update_failed), e.toString())
+                ctx.showAlert(getString(R.string.debug_app_update_failed), e.stackTraceToString())
             }
         }
 
-        // TODO
-        private fun queryPackageStatus(pkg: String): String {
+        private fun queryPackageStatus(pkgName: String): String {
             try {
-                val svc = android.os.ServiceManager.getService("package") ?: return "???"
-                val impl = svc.javaClass.getDeclaredField("this$0").apply { isAccessible = true }.get(svc)
-                val settings = impl.javaClass.getDeclaredField("mSettings").apply { isAccessible = true }.get(impl)
-                val mPackages = settings.javaClass.getDeclaredField("mPackages").apply { isAccessible = true }.get(settings) as? Map<*,*>
-                val pkgSetting = mPackages?.get(pkg) ?: return "???"
-                // try methods/fields
-                val isDebuggableMethod = pkgSetting.javaClass.methods.firstOrNull { it.name == "isDebuggable" }
-                if (isDebuggableMethod != null) {
-                    val dbg = isDebuggableMethod.invoke(pkgSetting) as? Boolean ?: false
-                    if (dbg) return "debuggable"
+                val svc = ServiceManager.getService("package") ?:
+                throw IllegalStateException("Package service not found")
+
+                val pkgSetting = svc.objectHelper()
+                    .getObject("this$0")!!
+                    .objectHelper()
+                    .getObject("mSettings")!!
+                    .objectHelper()
+                    .getObject("mPackages")!!
+                    .cast<Map<Any, Any>>() // <String, PackageSetting>
+                    .getOrElse(pkgName) { throw IllegalStateException("Package not found") }
+
+                val pkg = pkgSetting.objectHelper()
+                    .getObject("pkg")!! // PackageImpl
+
+                val hasRunAs = pkg.javaClass.methodFinder()
+                    .filterByName("isDebuggable")
+                    .first()
+                    .invoke(pkg) as Boolean
+
+                val flags = pkgSetting.objectHelper().getObjectUntilSuperclass("mPkgFlags")!! as Int
+                val isFullyDebuggable = (flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+                return when {
+                    isFullyDebuggable -> getString(R.string.debug_app_action_off)
+                    hasRunAs -> getString(R.string.debug_app_action_run_as)
+                    else -> getString(R.string.debug_app_action_debuggable)
                 }
-                // best-effort fallback
-                val pm = ctx.packageManager
-                val ai = pm.getApplicationInfo(pkg, 0)
-                if (ai.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) return "debuggable"
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("DebugAppListFragment", "Failed to query package status for $pkgName", e)
+                return "<error>"
             }
-            // fallback
-            return "off"
         }
     }
 
-    private class VH(val binding: ItemSystemAppBinding) : RecyclerView.ViewHolder(binding.root)
+    private fun setPackageModeReflection(pkgName: String, mode: PackageMode) {
+        val svc = ServiceManager.getService("package")
+            .objectHelper()
+            .getObject("this$0")!!
 
-    enum class PackageMode { OFF, RUN_AS, DEBUGGABLE }
+        val pkgSetting = svc.objectHelper()
+            .getObject("mSettings")!!
+            .objectHelper()
+            .getObject("mPackages")!!
+            .cast<Map<Any, Any>>() // <String, PackageSetting>
+            .getOrElse(pkgName) { throw IllegalStateException("Package not found") }
 
-    // TODO
-    private fun setPackageModeReflection(pkgName: String, mode: PackageMode): Boolean {
-        try {
-            val svc = android.os.ServiceManager.getService("package") ?: return false
-            val implField = svc.javaClass.getDeclaredField("this$0").apply { isAccessible = true }
-            val packManService = implField.get(svc)
+        val pkg = pkgSetting.objectHelper()
+            .getObject("pkg")!! // PackageImpl
 
-            val settingsField = packManService.javaClass.getDeclaredField("mSettings").apply { isAccessible = true }
-            val settings = settingsField.get(packManService)
+        // pkgSetting.pkg.isDebuggable is used by packages.list (native code) -> enables run-as
+        pkg.javaClass.methodFinder()
+            .filterByName("setDebuggable")
+            .filterByParamTypes(Boolean::class.javaPrimitiveType)
+            .first()
+            .invoke(pkg, mode != PackageMode.OFF)
 
-            val packagesField = settings.javaClass.getDeclaredField("mPackages").apply { isAccessible = true }
-            val mPackages = packagesField.get(settings) as? MutableMap<Any, Any> ?: return false
+        // Update the package flags with FLAG_DEBUGGABLE
+        val flags = pkgSetting.objectHelper().getObjectUntilSuperclass("mPkgFlags")!! as Int
+        pkgSetting.objectHelper()
+            .setObjectUntilSuperclass(
+                "mPkgFlags",
+                if (mode == PackageMode.DEBUGGABLE) flags or ApplicationInfo.FLAG_DEBUGGABLE
+                else flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+            )
 
-            val pkgSetting = mPackages[pkgName] ?: return false
-
-            // call setDebuggable(boolean)
-            try {
-                val setDbg = pkgSetting.javaClass.getMethod("setDebuggable", Boolean::class.javaPrimitiveType)
-                when (mode) {
-                    PackageMode.OFF -> setDbg.invoke(pkgSetting, false)
-                    PackageMode.RUN_AS -> setDbg.invoke(pkgSetting, true)
-                    PackageMode.DEBUGGABLE -> setDbg.invoke(pkgSetting, true)
-                }
-            } catch (_: NoSuchMethodException) {
-                // ignore
-            }
-
-            // if DEBUGGABLE, try to set publicFlags |= FLAG_DEBUGGABLE
-            if (mode == PackageMode.DEBUGGABLE) {
-                try {
-                    val pubF = pkgSetting.javaClass.getDeclaredField("pkgFlags")
-                    pubF.isAccessible = true
-                    val cur = pubF.getInt(pkgSetting)
-                    val new = cur or android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE
-                    pubF.setInt(pkgSetting, new)
-                } catch (_: Exception) {
-                    try {
-                        val pubF = pkgSetting.javaClass.getDeclaredField("publicFlags")
-                        pubF.isAccessible = true
-                        val cur = pubF.getInt(pkgSetting)
-                        val new = cur or android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE
-                        pubF.setInt(pkgSetting, new)
-                    } catch (_: Exception) {
-                        // best-effort only
-                    }
-                }
-            }
-
-            // write settings
-            try {
-                val writeMethod = packManService.javaClass.getDeclaredMethod("writeSettings", Boolean::class.javaPrimitiveType)
-                writeMethod.isAccessible = true
-                writeMethod.invoke(packManService, true)
-            } catch (_: NoSuchMethodException) {
-                try {
-                    val writeMethod = packManService.javaClass.getDeclaredMethod("writePackageListLPrInternal")
-                    writeMethod.isAccessible = true
-                    writeMethod.invoke(packManService)
-                } catch (_: Exception) {
-                }
-            }
-
-            return true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
+        // Write updated packages.list and packages.xml
+        svc.javaClass.methodFinder()
+            .filterByName("writeSettings")
+            .filterByParamTypes(Boolean::class.javaPrimitiveType)
+            .first()
+            .invoke(svc, /* sync */ true)
     }
 }

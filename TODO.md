@@ -1,19 +1,8 @@
-## Run as any user app
-    // Enable run-as. Only modifies /data/system/packages.list.
-    // Debuggable flags in /data/system/packages.xml are not updated by this! -> undetectable
-    PackageService -> this -> mSettings -> mPackages[] -> pkg -> setDebuggable
-    PackageService -> this -> writeSettings(sync=true)
-    (see writePackageListLPrInternal)
-
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
     // Could implement code injection and Xposed-like functionality here for apps
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
-
-## Make any app debuggable
-    // To set a package fully debuggable (detectable!):
-    PackageService -> this -> mSettings -> mPackages[] -> setDebuggable AND publicFlags |= FLAG_DEBUGGABLE
 
 ## Circumvent PairIP / Play Store checks:
     PackageService -> this -> mSettings -> mPackages[] -> installSource
@@ -26,6 +15,9 @@
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
 * Needs resource overlay to add XML file to res/xml (check if possible)
 
+## Implement storage providers
+* Access from Mixplorer, etc...
+
 ## Other ideas
 * /data/misc: https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/private/system_server.te;l=649?q=system_server
 * https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/contexts/file_contexts_test_data?
@@ -36,7 +28,14 @@
   * Ref: https://github.com/Magisk-Modules-Alt-Repo/audio-misc-settings/blob/master/service.sh
 * Disable storage restrictions?
   * Ref: https://github.com/Xposed-Modules-Repo/com.github.dan.nostoragerestrict/blob/main/app/src/main/java/com/github/dan/NoStorageRestrict/FolderRestrictionhookA14.java
-
+*  /data/misc[_ce|_de]/*/apexdata
+* /data/system/environ
+* selinux parser to find interesting Samsung OEM modifications from CIL
+* PackageManagerServiceUtils
+  * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
+* InstallPackageHelper
+  * assertOverlayIsValid
+  
 ## System stuff to hook into
 * BroadcastHistory: monitor broadcasts
 * ActivityInterceptorCallback: intercept activity launches
