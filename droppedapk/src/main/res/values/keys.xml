@@ -5,6 +5,7 @@
     <string name="pref_key_shizuku"> translatable="false"pref_key_shizuku</string>
     <string name="pref_key_internal_dex" translatable="false">pref_key_internal_dex</string>
     <string name="pref_key_switch_process" translatable="false">pref_key_switch_process</string>
+    <string name="pref_key_system_app_list" translatable="false">pref_key_system_app_list</string>
     <string name="pref_key_info" translatable="false">pref_key_info</string>
     <string name="pref_key_id_info" translatable="false">pref_key_id_info</string>
 </resources>

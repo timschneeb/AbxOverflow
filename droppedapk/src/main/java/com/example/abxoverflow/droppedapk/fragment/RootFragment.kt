@@ -8,13 +8,13 @@ import android.util.Log
 import androidx.preference.Preference
 import com.example.abxoverflow.droppedapk.InstanceProvider
 import com.example.abxoverflow.droppedapk.MainActivity
-import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.Mods
 import com.example.abxoverflow.droppedapk.R
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
+import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
 import com.example.abxoverflow.droppedapk.utils.toast
@@ -29,6 +29,7 @@ class RootFragment : BasePreferenceFragment() {
     private val shizukuPref: Preference by lazy { findPreference(getString(R.string.pref_key_shizuku))!! }
     private val dexPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_internal_dex))!! }
     private val switchPref: Preference by lazy { findPreference(getString(R.string.pref_key_switch_process))!! }
+    private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_system_app_list))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
 
@@ -89,6 +90,27 @@ class RootFragment : BasePreferenceFragment() {
             )
             true
         }
+
+        systemListPref.apply {
+            setOnPreferenceClickListener {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.container, SystemAppListFragment())
+                    .addToBackStack("system_app_list")
+                    .commit()
+                true
+            }
+
+            if (!isSystemServer) {
+                title = getString(R.string.system_app_list_title)
+                summary = getString(R.string.system_only_feature)
+                isEnabled = false
+            } else {
+                title = getString(R.string.system_app_list_title)
+                summary = getString(R.string.system_app_list_subtitle)
+                isEnabled = true
+            }
+        }
+
 
         refreshInfo()
         refreshShizukuPref()

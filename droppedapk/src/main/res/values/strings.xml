@@ -41,6 +41,14 @@
 
     <string name="action_kill">Kill</string>
     <string name="action_clear">Clear</string>
+    <string name="system_only_feature">This feature is only available when running in system_server.</string>
+    <string name="action_off">Off</string>
+    <string name="action_run_as">Run-as</string>
+    <string name="action_debuggable">Debuggable</string>
+    <string name="updated_package">Updated %1$s to %2$s</string>
+    <string name="update_failed">Failed to update</string>
+    <string name="system_app_list_title">System app list</string>
+    <string name="system_app_list_subtitle">List and modify package debug/run-as state (system only)</string>
     <string name="history_up">History up</string>
     <string name="history_down">History down</string>
     <string name="enter_command">Enter command</string>
