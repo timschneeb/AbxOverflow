@@ -3,6 +3,7 @@
 package com.example.abxoverflow.droppedapk.utils
 
 import android.app.ActivityThread
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Parcelable
@@ -12,6 +13,7 @@ import android.util.TypedValue
 import android.view.View
 import androidx.annotation.AttrRes
 import androidx.core.content.res.ResourcesCompat
+import io.github.kyuubiran.ezxhelper.core.helper.ObjectHelper.`-Static`.objectHelper
 import java.io.InputStream
 
 val currentProcessName: String
@@ -23,6 +25,33 @@ val currentProcessName: String
 
 val isSystemServer: Boolean
     get() = currentProcessName == "system_server"
+
+val Context.packageSeInfo: String
+    get() = runCatching {
+        (packageManager.getApplicationInfo(packageName, 0)
+            .objectHelper()
+            .getObject("seInfo") as? String)
+            .toString()
+            .plus(
+                (packageManager.getApplicationInfo(packageName, 0)
+                    .objectHelper()
+                    .getObject("seInfoUser") as? String).toString()
+            )
+    }.getOrDefault("<error>")
+
+
+val seInfo: String
+    get() = executeShellCatching("id -Z").trim().trim('\n')
+
+fun executeShellCatching(cmdline: String): String = runCatching {
+    Runtime.getRuntime().exec(cmdline).readAllToString()
+}.getOrElse(Throwable::stackTraceToString)
+
+fun java.lang.Process?.readAllToString(): String = StringBuilder().let {
+    it.append(this?.inputStream.readToString(isError = false))
+    it.append(this?.errorStream.readToString(isError = true))
+    it.toString()
+}
 
 fun InputStream?.readToString(isError: Boolean): String {
     return this?.bufferedReader()?.use { reader ->

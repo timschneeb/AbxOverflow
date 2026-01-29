@@ -50,8 +50,7 @@
             android:selectable="false" />
 
         <androidx.preference.Preference
-            android:key="@string/pref_key_id_info"
-            android:selectable="false" />
+            android:key="@string/pref_key_id_info" />
 
     </androidx.preference.PreferenceCategory>
 

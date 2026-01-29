@@ -6,6 +6,7 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Process
+import android.system.Os
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -23,12 +24,15 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
+import com.example.abxoverflow.droppedapk.utils.executeShellCatching
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
+import com.example.abxoverflow.droppedapk.utils.packageSeInfo
+import com.example.abxoverflow.droppedapk.utils.seInfo
+import com.example.abxoverflow.droppedapk.utils.showAlert
 import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launch
-import java.io.InputStreamReader
 
 class RootFragment : BasePreferenceFragment() {
 
@@ -206,15 +210,20 @@ class RootFragment : BasePreferenceFragment() {
         infoPref.summary = """
             uid=${Process.myUid()}
             pid=${Process.myPid()}
+            ppid=${Os.getppid()}
+            seinfo=${seInfo}
+            seinfo_pkg=${requireContext().packageSeInfo}
             process=${currentProcessName}
             explicit_process=${requireActivity().intent.getStringExtra(EXTRA_EXPLICIT_PROCESS)}
             """.trimIndent()
 
-        infoIdPref.summary = runCatching {
-            InputStreamReader(Runtime.getRuntime().exec("id").inputStream)
-                .readLines()
-                .joinToString("\n")
-        }.getOrElse(Throwable::stackTraceToString)
+        executeShellCatching("id").let { out ->
+            infoIdPref.summary = out
+            infoIdPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                requireContext().showAlert(getString(R.string.result), out)
+                true
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
