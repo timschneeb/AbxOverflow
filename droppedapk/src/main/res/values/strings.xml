@@ -3,7 +3,7 @@
 
     <string name="shell_run_title">Run shell command</string>
     <string name="shell_run_subtitle">Execute arbitrary shell command and show stdout/stderr</string>
-    <string name="shell_command">Shell command</string>
+    <string name="shell_terminal">Terminal</string>
     <string name="error">Error</string>
     <string name="error_template">Error: %1$s (%2$s)</string>
     <string name="result">Result</string>
@@ -27,6 +27,8 @@
     <string name="switch_process_title">Switch process</string>
     <string name="switch_process_subtitle">Start this app in a different process</string>
     <string name="process_switcher_title">Select process to switch to…</string>
+
+    <string name="settings_title">Settings</string>
 
     <string name="pref_category_actions_title">Actions</string>
     <string name="pref_category_info_title">Info</string>

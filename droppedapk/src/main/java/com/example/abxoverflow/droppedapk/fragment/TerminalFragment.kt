@@ -1,4 +1,4 @@
-package com.example.abxoverflow.droppedapk.terminal
+package com.example.abxoverflow.droppedapk.fragment
 
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
@@ -10,15 +10,17 @@ import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import com.example.abxoverflow.droppedapk.databinding.FragmentTerminalBinding
+import com.example.abxoverflow.droppedapk.terminal.InternalShell
+import com.example.abxoverflow.droppedapk.terminal.LocalShell
+import com.example.abxoverflow.droppedapk.terminal.TerminalShell
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
 import com.example.abxoverflow.droppedapk.utils.truncateUtf8Bytes
 import java.io.File
 import java.util.concurrent.Executors
 
-class TerminalFragment : Fragment() {
+class TerminalFragment : BaseFragment() {
     private lateinit var binding: FragmentTerminalBinding
 
     private var shell: TerminalShell? = null
@@ -40,6 +42,7 @@ class TerminalFragment : Fragment() {
     private val hostname: String? by lazy { currentProcessName }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        super.onCreateView(inflater, container, savedInstanceState)
         binding = FragmentTerminalBinding.inflate(inflater, container, false)
         return binding.root
     }

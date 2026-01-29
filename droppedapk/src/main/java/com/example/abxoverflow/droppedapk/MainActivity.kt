@@ -19,7 +19,9 @@ import androidx.core.view.updateLayoutParams
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
-import com.example.abxoverflow.droppedapk.terminal.TerminalFragment
+import com.example.abxoverflow.droppedapk.fragment.RootFragment
+import com.example.abxoverflow.droppedapk.fragment.TerminalFragment
+import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
@@ -57,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (savedInstanceState == null) {
-            PrefsFragment().also {
+            RootFragment().also {
                 supportFragmentManager.beginTransaction().replace(R.id.container, it).commit()
             }
         }
@@ -75,7 +77,19 @@ class MainActivity : AppCompatActivity() {
             )
 
             invalidateOptionsMenu()
+            updateActionBarTitle()
         }
+
+        updateActionBarTitle()
+    }
+
+    private fun updateActionBarTitle() {
+        val frag = supportFragmentManager.findFragmentById(R.id.container)
+        val title = when (frag) {
+            is TerminalFragment -> getString(R.string.shell_terminal)
+            else -> "${getString(R.string.app_name)} ($currentProcessName)"
+        }
+        supportActionBar?.title = title
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

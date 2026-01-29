@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.abxoverflow.droppedapk.system"
-        minSdk = 31
+        minSdk = 26
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"

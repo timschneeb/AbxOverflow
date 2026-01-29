@@ -1,4 +1,4 @@
-package com.example.abxoverflow.droppedapk
+package com.example.abxoverflow.droppedapk.fragment
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -6,11 +6,15 @@ import android.os.Bundle
 import android.os.Process
 import android.util.Log
 import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import com.example.abxoverflow.droppedapk.InstanceProvider
+import com.example.abxoverflow.droppedapk.MainActivity
+import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+import com.example.abxoverflow.droppedapk.Mods
+import com.example.abxoverflow.droppedapk.R
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
-import com.example.abxoverflow.droppedapk.terminal.TerminalFragment
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
 import com.example.abxoverflow.droppedapk.utils.toast
@@ -18,7 +22,7 @@ import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer.launch
 import java.io.InputStreamReader
 
-class PrefsFragment : PreferenceFragmentCompat() {
+class RootFragment : BasePreferenceFragment() {
 
     private val shellPref: Preference by lazy { findPreference(getString(R.string.pref_key_shell_run))!! }
     private val reflPref: Preference by lazy { findPreference(getString(R.string.pref_key_reflection_explorer))!! }
