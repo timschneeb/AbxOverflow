@@ -10,6 +10,7 @@ import androidx.preference.PreferenceFragmentCompat
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
+import com.example.abxoverflow.droppedapk.terminal.TerminalFragment
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
 import com.example.abxoverflow.droppedapk.utils.toast

@@ -19,6 +19,7 @@ import androidx.core.view.updateLayoutParams
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
+import com.example.abxoverflow.droppedapk.terminal.TerminalFragment
 import com.example.abxoverflow.droppedapk.utils.showConfirmDialog
 import com.example.abxoverflow.droppedapk.utils.toast
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
@@ -90,9 +91,8 @@ class MainActivity : AppCompatActivity() {
         menu?.findItem(R.id.action_clear)?.isVisible = isTerminal
         menu?.findItem(R.id.uninstall)?.isVisible = !isTerminal
         menu?.findItem(R.id.action_toggle_wrap)?.isVisible = isTerminal
-        // Update wrap toggle checked state based on current state
         if (isTerminal) {
-            menu?.findItem(R.id.action_toggle_wrap)?.isChecked = frag.isWrapEnabled()
+            menu?.findItem(R.id.action_toggle_wrap)?.isChecked = frag.wrapEnabled
         }
         return result
     }
@@ -105,9 +105,10 @@ class MainActivity : AppCompatActivity() {
         }
         when (item.itemId) {
             R.id.action_toggle_wrap -> {
-                val tf = supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment ?: return true
-                val newState = tf.toggleWrap()
-                item.isChecked = newState
+                val tf = supportFragmentManager.findFragmentById(R.id.container) as? TerminalFragment
+                    ?: return true
+                tf.wrapEnabled = !tf.wrapEnabled
+                item.isChecked = tf.wrapEnabled
                 return true
             }
             R.id.action_kill -> {
