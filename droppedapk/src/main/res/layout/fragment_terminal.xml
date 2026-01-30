@@ -69,7 +69,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:imeOptions="actionSend|flagNoPersonalizedLearning"
-                android:inputType="text|textLongMessage|textNoSuggestions" />
+                android:inputType="text|textLongMessage|textNoSuggestions|textCapSentences|textMultiLine" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
