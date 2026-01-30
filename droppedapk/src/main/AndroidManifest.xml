@@ -58,6 +58,18 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <provider
+            android:authorities="me.timschneeberger.droppedapk.provider.PrivilegedDocumentsProvider"
+            android:name="com.example.abxoverflow.droppedapk.utils.PrivilegedDocumentsProvider"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </provider>
     </application>
 
 </manifest>
