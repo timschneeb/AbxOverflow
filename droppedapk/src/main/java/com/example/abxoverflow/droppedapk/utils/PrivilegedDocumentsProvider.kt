@@ -29,10 +29,13 @@ open class PrivilegedDocumentsProvider : DocumentsProvider() {
         mapOf(
             "#data_system" to File("/data/system"),
             "#data_system_de" to File("/data/system_de"),
+            "#data_system_ce" to File("/data/system_ce"),
             "#data_misc" to File("/data/misc"),
             "#data_misc_de" to File("/data/misc_de"),
+            "#data_misc_ce" to File("/data/misc_ce"),
             "#data_vendor" to File("/data/vendor"),
             "#data_vendor_de" to File("/data/vendor_de"),
+            "#data_vendor_ce" to File("/data/vendor_ce"),
             "#data_data" to File("/data/data"),
             "#data_data_de" to File("/data/data_de"),
         )
