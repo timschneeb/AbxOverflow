@@ -11,18 +11,16 @@
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
 * Needs resource overlay to add XML file to res/xml (check if possible)
 
+## Feature flags
+* https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/core/java/android/util/FeatureFlagUtils.java?q=case:y%20%22SystemProperties.get%22%20-ro%5C.%20file:.java%20-file:test%20-file:AdServices%20-file:Car%20-file:hiddenapi%20-file:cts&ss=android%2Fplatform%2Fsuperproject&start=101
+* https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/packages/SystemUI/src/com/android/systemui/flags/Flags.kt
+
 ## Other ideas
 * /data/misc: https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/private/system_server.te;l=649?q=system_server
 * https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/contexts/file_contexts_test_data?
-* /data/server_configurable_flags & /data/server_configurable_flags/test
-* com.android.providers.settings/databases/settings.db
-* Possibly inject custom audio effects library?
-* Disable built-in (always-on) effects?
-  * Ref: https://github.com/Magisk-Modules-Alt-Repo/audio-misc-settings/blob/master/service.sh
 * Disable storage restrictions?
   * Ref: https://github.com/Xposed-Modules-Repo/com.github.dan.nostoragerestrict/blob/main/app/src/main/java/com/github/dan/NoStorageRestrict/FolderRestrictionhookA14.java
 *  /data/misc[_ce|_de]/*/apexdata
-* /data/system/environ
 * selinux parser to find interesting Samsung OEM modifications from CIL
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
@@ -64,3 +62,4 @@
       gameSDK sub mode 4 mode (idx=14)
       browser mode (idx=15)
     ```
+

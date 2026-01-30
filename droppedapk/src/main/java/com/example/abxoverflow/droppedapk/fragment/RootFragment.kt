@@ -24,7 +24,9 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
+import com.example.abxoverflow.droppedapk.utils.executeShell
 import com.example.abxoverflow.droppedapk.utils.executeShellCatching
+import com.example.abxoverflow.droppedapk.utils.isSamsungDevice
 import com.example.abxoverflow.droppedapk.utils.isSystemServer
 import com.example.abxoverflow.droppedapk.utils.packageSeInfo
 import com.example.abxoverflow.droppedapk.utils.seInfo
@@ -45,6 +47,7 @@ class RootFragment : BasePreferenceFragment() {
     private val installSourcePref: Preference by lazy { findPreference(getString(R.string.pref_key_install_source))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
+    private val multiuserPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_multiuser))!! }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -140,10 +143,38 @@ class RootFragment : BasePreferenceFragment() {
             }
         }
 
+        multiuserPref.apply {
+            if (!isSamsungDevice) {
+                summary = getString(R.string.samsung_only_feature)
+                isEnabled = false
+            }
+
+            setOnPreferenceClickListener {
+                try {
+                    val currentlyEnabled = executeShell("getprop persist.sys.show_multiuserui")
+                        .trim()
+                        .let { it == "1" || it == "true" }
+
+                    if (currentlyEnabled) {
+                        executeShell("setprop persist.sys.max_users 1")
+                        executeShell("setprop persist.sys.show_multiuserui 0")
+                    } else {
+                        executeShell("setprop persist.sys.max_users 8")
+                        executeShell("setprop persist.sys.show_multiuserui 1")
+                    }
+                } catch (e: Exception) {
+                    context.showAlert(getString(R.string.error), e.toString())
+                }
+
+                refreshMultiuserPref()
+                true
+            }
+        }
 
         refreshInfo()
         refreshShizukuPref()
         refreshDexPref()
+        refreshMultiuserPref()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -169,6 +200,18 @@ class RootFragment : BasePreferenceFragment() {
         refreshShizukuPref()
         refreshDexPref()
         refreshInfo()
+        refreshMultiuserPref()
+    }
+
+    private fun refreshMultiuserPref() {
+        try {
+            multiuserPref.isChecked = executeShellCatching("getprop persist.sys.show_multiuserui")
+                .trim()
+                .let { it == "1" || it == "true" }
+        } catch (e: Exception) {
+            multiuserPref.summary = getString(R.string.system_server_only_feature)
+            Log.e(TAG, "refreshMultiuserPref: ", e)
+        }
     }
 
     private fun refreshShizukuPref() {

@@ -7,6 +7,8 @@
     <string name="frida_gadget_load_failed">Failed to load frida-gadget-android library: %1$s</string>
     <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
     <string name="system_server_only_feature">This feature is only available when running within system_server</string>
+    <string name="reboot_required">Reboot required to apply changes</string>
+    <string name="samsung_only_feature">This feature is only available on Samsung devices</string>
 
     <string name="uninstall">Uninstall</string>
     <string name="uninstall_confirm">This will uninstall DroppedAPK and remove the invalid past signatures from the system package manager. Continue?</string>
@@ -57,5 +59,8 @@
     <string name="install_source_change_confirm_title">Change installation source?</string>
     <string name="install_source_change_confirm">This operation will set the install source of %1$s from %2$s to the Play Store. This helps to circumvent Play Integrity checks for side-loaded apps. Proceed?</string>
     <string name="install_source_change_success">Install source changed</string>
+
+    <string name="multiuser_title">Multi-user support</string>
+    <string name="multiuser_subtitle">Enable user switcher in the status bar (requires reboot)</string>
 
 </resources>

@@ -43,9 +43,16 @@ val Context.packageSeInfo: String
 val seInfo: String
     get() = executeShellCatching("id -Z").trim().trim('\n')
 
+val isSamsungDevice: Boolean
+    get() = Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+
 fun executeShellCatching(cmdline: String): String = runCatching {
     Runtime.getRuntime().exec(cmdline).readAllToString()
 }.getOrElse(Throwable::stackTraceToString)
+
+fun executeShell(cmdline: String): String =
+    Runtime.getRuntime().exec(cmdline).readAllToString()
+
 
 fun java.lang.Process?.readAllToString(): String = StringBuilder().let {
     it.append(this?.inputStream.readToString(isError = false))

@@ -22,17 +22,23 @@
             android:title="@string/shizuku_title"
             android:summary="@string/shizuku_subtitle" />
 
+        <androidx.preference.Preference
+            android:key="@string/pref_key_switch_process"
+            android:icon="@drawable/ic_swap_horiz"
+            android:title="@string/switch_process_title"
+            android:summary="@string/switch_process_subtitle" />
+
         <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_internal_dex"
             android:icon="@drawable/ic_cast"
             android:title="@string/internal_dex_screen_title"
             android:summary="@string/internal_dex_screen_subtitle" />
 
-        <androidx.preference.Preference
-            android:key="@string/pref_key_switch_process"
-            android:icon="@drawable/ic_swap_horiz"
-            android:title="@string/switch_process_title"
-            android:summary="@string/switch_process_subtitle" />
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_multiuser"
+            android:icon="@drawable/ic_supervisor_account"
+            android:title="@string/multiuser_title"
+            android:summary="@string/multiuser_subtitle" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_debug_app_list"
