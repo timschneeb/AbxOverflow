@@ -45,11 +45,17 @@
     <string name="pref_category_actions_title">Actions</string>
     <string name="pref_category_info_title">Info</string>
 
+    <string name="debug_app_list_title">Debuggable apps</string>
+    <string name="debug_app_list_subtitle">List and modify package debug/run-as states</string>
     <string name="debug_app_action_off">Off</string>
     <string name="debug_app_action_run_as">Run-as</string>
     <string name="debug_app_action_debuggable">Debuggable</string>
     <string name="debug_app_update_failed">Failed to update</string>
-    <string name="debug_app_list_title">Debuggable apps</string>
-    <string name="debug_app_list_subtitle">List and modify package debug/run-as states</string>
+
+    <string name="install_source_title">Change installation sources</string>
+    <string name="install_source_subtitle">Bypass Play Integrity checks that detects sideloaded apps</string>
+    <string name="install_source_change_confirm_title">Change installation source?</string>
+    <string name="install_source_change_confirm">This operation will set the install source of %1$s from %2$s to the Play Store. This helps to circumvent Play Integrity checks for side-loaded apps. Proceed?</string>
+    <string name="install_source_change_success">Install source changed</string>
 
 </resources>

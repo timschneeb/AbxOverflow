@@ -4,19 +4,12 @@
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
 
-## Circumvent PairIP / Play Store checks:
-    PackageService -> this -> mSettings -> mPackages[] -> installSource
-      -> mInstallerPackageName = com.android.vending
-
 ## Take over other shared_uids
 * Add automatic package shared uid insertion (like enhanced AbxDropper)
 
 ## Trust user certificates
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
 * Needs resource overlay to add XML file to res/xml (check if possible)
-
-## Implement storage providers
-* Access from Mixplorer, etc...
 
 ## Other ideas
 * /data/misc: https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/private/system_server.te;l=649?q=system_server

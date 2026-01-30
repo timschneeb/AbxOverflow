@@ -42,6 +42,7 @@ class RootFragment : BasePreferenceFragment() {
     private val dexPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_internal_dex))!! }
     private val switchPref: Preference by lazy { findPreference(getString(R.string.pref_key_switch_process))!! }
     private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_debug_app_list))!! }
+    private val installSourcePref: Preference by lazy { findPreference(getString(R.string.pref_key_install_source))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
 
@@ -113,12 +114,28 @@ class RootFragment : BasePreferenceFragment() {
             }
 
             if (!isSystemServer) {
-                title = getString(R.string.debug_app_list_title)
                 summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
             } else {
-                title = getString(R.string.debug_app_list_title)
                 summary = getString(R.string.debug_app_list_subtitle)
+                isEnabled = true
+            }
+        }
+
+        installSourcePref.apply {
+            setOnPreferenceClickListener {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.container, InstallSourceAppListFragment())
+                    .addToBackStack("install_source_app_list")
+                    .commit()
+                true
+            }
+
+            if (!isSystemServer) {
+                summary = getString(R.string.system_server_only_feature)
+                isEnabled = false
+            } else {
+                summary = getString(R.string.install_source_subtitle)
                 isEnabled = true
             }
         }
