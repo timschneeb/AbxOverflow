@@ -2,6 +2,7 @@ package com.example.abxoverflow.droppedapk
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ComponentName
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
@@ -74,5 +75,12 @@ class SystemProcessTrampolineActivity : Activity() {
         const val EXTRA_EXPLICIT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_EXPLICIT_PROCESS"
         const val EXTRA_TARGET_INTENT: String = "${BuildConfig.APPLICATION_ID}.EXTRA_TARGET_INTENT"
         const val EXTRA_SELECT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_SELECT_PROCESS"
+
+        val component: ComponentName =
+            ComponentName(
+                // We must specifically access the system process variant, otherwise we can't get system_server access
+                "${BuildConfig.APPLICATION_ID.substringBeforeLast('.')}.system",
+                SystemProcessTrampolineActivity::class.java.name
+            )
     }
 }

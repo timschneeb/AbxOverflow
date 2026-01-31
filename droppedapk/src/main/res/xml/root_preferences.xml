@@ -52,6 +52,12 @@
             android:title="@string/install_source_title"
             android:summary="@string/install_source_subtitle" />
 
+        <androidx.preference.Preference
+            android:key="@string/pref_key_inject_shared_uid_keyset"
+            android:icon="@drawable/ic_key"
+            android:title="@string/inject_shared_uid_keyset_title"
+            android:summary="@string/inject_shared_uid_keyset_subtitle" />
+
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

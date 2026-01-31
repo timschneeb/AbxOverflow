@@ -23,6 +23,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+import com.example.abxoverflow.droppedapk.utils.SignatureInjector
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.executeShell
 import com.example.abxoverflow.droppedapk.utils.executeShellCatching
@@ -48,6 +49,7 @@ class RootFragment : BasePreferenceFragment() {
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
     private val multiuserPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_multiuser))!! }
+    private val injectSharedUidKeysPref: Preference by lazy { findPreference(getString(R.string.pref_key_inject_shared_uid_keyset))!! }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -97,7 +99,8 @@ class RootFragment : BasePreferenceFragment() {
 
         switchPref.setOnPreferenceClickListener {
             startActivity(
-                Intent(requireContext(), SystemProcessTrampolineActivity::class.java)
+                Intent()
+                    .setComponent(SystemProcessTrampolineActivity.component)
                     .putExtra(EXTRA_SELECT_PROCESS, true)
                     .putExtra(
                         EXTRA_TARGET_INTENT,
@@ -169,6 +172,23 @@ class RootFragment : BasePreferenceFragment() {
                 refreshMultiuserPref()
                 true
             }
+        }
+
+        injectSharedUidKeysPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            context?.let { ctx ->
+                try {
+                    SignatureInjector.inject(mapOf("com.example.abxoverflow.droppedapk.com_samsung_accessory_wmanager" to 10327))
+                } catch (e: Exception) {
+                    if (e is IllegalAccessException) {
+                        // Used by the injector to kill system_server to apply changes
+                        throw e
+                    }
+
+                    ctx.showAlert(getString(R.string.error), e.stackTraceToString())
+                }
+            }
+
+            true
         }
 
         refreshInfo()

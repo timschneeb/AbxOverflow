@@ -15,8 +15,9 @@ import androidx.core.view.updateLayoutParams
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
-import com.example.abxoverflow.droppedapk.fragment.RootFragment
 import com.example.abxoverflow.droppedapk.fragment.DebugAppListFragment
+import com.example.abxoverflow.droppedapk.fragment.InstallSourceAppListFragment
+import com.example.abxoverflow.droppedapk.fragment.RootFragment
 import com.example.abxoverflow.droppedapk.fragment.TerminalFragment
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.toast
@@ -83,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         val title = when (frag) {
             is TerminalFragment -> getString(R.string.shell_terminal)
             is DebugAppListFragment -> getString(R.string.debug_app_list_title)
+            is InstallSourceAppListFragment -> getString(R.string.install_source_title)
             else -> "${getString(R.string.app_name)} ($currentProcessName)"
         }
         supportActionBar?.title = title
@@ -120,7 +122,8 @@ class MainActivity : AppCompatActivity() {
             try {
                 if (explicitProcess != null) {
                     context.startActivity(
-                        Intent(context, SystemProcessTrampolineActivity::class.java)
+                        Intent()
+                            .setComponent(SystemProcessTrampolineActivity.component)
                             .putExtra(EXTRA_EXPLICIT_PROCESS, explicitProcess)
                             .putExtra(EXTRA_TARGET_INTENT, intent)
                     )

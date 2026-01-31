@@ -63,4 +63,7 @@
     <string name="multiuser_title">Multi-user support</string>
     <string name="multiuser_subtitle">Enable user switcher in the status bar (requires reboot)</string>
 
+    <string name="inject_shared_uid_keyset_title">Inject shared UID keyset</string>
+    <string name="inject_shared_uid_keyset_subtitle">Allows installing self-signed packages in shared system UID groups</string>
+
 </resources>
