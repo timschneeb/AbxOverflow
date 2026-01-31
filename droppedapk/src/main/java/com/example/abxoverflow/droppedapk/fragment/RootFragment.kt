@@ -1,6 +1,7 @@
 package com.example.abxoverflow.droppedapk.fragment
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -53,6 +54,7 @@ class RootFragment : BasePreferenceFragment() {
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
     private val multiuserPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_multiuser))!! }
     private val injectSharedUidKeysPref: Preference by lazy { findPreference(getString(R.string.pref_key_inject_shared_uid_keyset))!! }
+    private val documentsProviderPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_documents_provider))!! }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -197,28 +199,51 @@ class RootFragment : BasePreferenceFragment() {
             }
         }
 
+        documentsProviderPref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, value ->
+            try {
+                val enabled = value as Boolean
+                val pm = requireContext().packageManager
+                val comp = ComponentName(requireContext(), "com.example.abxoverflow.droppedapk.utils.PrivilegedDocumentsProvider")
+                val newState = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                pm.setComponentEnabledSetting(comp, newState, PackageManager.DONT_KILL_APP)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to toggle documents provider", e)
+                requireContext().showAlert(getString(R.string.error), e.toString())
+            }
+
+            refreshDocumentsProviderPref()
+            true
+        }
+
         refreshInfo()
         refreshShizukuPref()
         refreshDexPref()
         refreshMultiuserPref()
+        refreshDocumentsProviderPref()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
-                menuInflater.inflate(R.menu.menu_root, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                if (menuItem.itemId == R.id.uninstall) {
-                    context?.showConfirmDialog(title = R.string.uninstall, message = R.string.uninstall_confirm, onConfirm = ::performUninstall)
-                    return true
+        if (isSystemServer) {
+            requireActivity().addMenuProvider(object : MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: android.view.MenuInflater) {
+                    menuInflater.inflate(R.menu.menu_root, menu)
                 }
-                return false
-            }
-        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                    if (menuItem.itemId == R.id.uninstall) {
+                        context?.showConfirmDialog(
+                            title = R.string.uninstall,
+                            message = R.string.uninstall_confirm,
+                            onConfirm = ::performUninstall
+                        )
+                        return true
+                    }
+                    return false
+                }
+            }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }
     }
 
     override fun onResume() {
@@ -227,6 +252,7 @@ class RootFragment : BasePreferenceFragment() {
         refreshDexPref()
         refreshInfo()
         refreshMultiuserPref()
+        refreshDocumentsProviderPref()
     }
 
     private fun refreshMultiuserPref() {
@@ -312,9 +338,27 @@ class RootFragment : BasePreferenceFragment() {
         }
     }
 
+    private fun refreshDocumentsProviderPref() {
+        documentsProviderPref.apply {
+            try {
+                val comp = ComponentName(requireContext(), "com.example.abxoverflow.droppedapk.utils.PrivilegedDocumentsProvider")
+                val state = requireContext().packageManager.getComponentEnabledSetting(comp)
+                isChecked = state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                isEnabled = true
+            } catch (e: Exception) {
+                summary = e.message
+                isEnabled = false
+                isChecked = false
+                Log.e(TAG, "refreshDocumentsProviderPref: ", e)
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     private fun performUninstall() {
         try {
+            // TODO: this only uninstalls the system package, not other UID flavors
+
             val packManImplService: Any = ServiceManager.getService("package")
             val packManService = packManImplService.javaClass.getDeclaredField("this$0").run {
                 isAccessible = true

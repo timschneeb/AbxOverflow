@@ -76,6 +76,7 @@
             android:name="com.example.abxoverflow.droppedapk.utils.PrivilegedDocumentsProvider"
             android:grantUriPermissions="true"
             android:permission="android.permission.MANAGE_DOCUMENTS"
+            android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.content.action.DOCUMENTS_PROVIDER" />

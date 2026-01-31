@@ -4,9 +4,6 @@
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
 
-## Take over other shared_uids
-* Add automatic package shared uid insertion (like enhanced AbxDropper)
-
 ## Trust user certificates
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
 * Needs resource overlay to add XML file to res/xml (check if possible)
@@ -15,24 +12,25 @@
 * https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/core/java/android/util/FeatureFlagUtils.java?q=case:y%20%22SystemProperties.get%22%20-ro%5C.%20file:.java%20-file:test%20-file:AdServices%20-file:Car%20-file:hiddenapi%20-file:cts&ss=android%2Fplatform%2Fsuperproject&start=101
 * https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/packages/SystemUI/src/com/android/systemui/flags/Flags.kt
 
+## Launch trampoline
+* Apps without running processes (e.g com.android.shell) cannot be launched from the home screen.
+* Add trampoline home activity
+
+## Reflection Explorer
+* Allow text input of class to get a list of static methods/fields
+* Implement search algorithm for static methods/fields
+
+## SystemUI
+* Dumpables
+* Tunables
+
 ## Other ideas
-* /data/misc: https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/private/system_server.te;l=649?q=system_server
-* https://cs.android.com/android/platform/superproject/+/android-latest-release:system/sepolicy/contexts/file_contexts_test_data?
-* Disable storage restrictions?
-  * Ref: https://github.com/Xposed-Modules-Repo/com.github.dan.nostoragerestrict/blob/main/app/src/main/java/com/github/dan/NoStorageRestrict/FolderRestrictionhookA14.java
-*  /data/misc[_ce|_de]/*/apexdata
+* JVMTI agent can be attached to system_server. Other apps need to be debuggable.
 * selinux parser to find interesting Samsung OEM modifications from CIL
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
 * InstallPackageHelper
   * assertOverlayIsValid
-  
-## System stuff to hook into
-* BroadcastHistory: monitor broadcasts
-* ActivityInterceptorCallback: intercept activity launches
-* SettingsService (for internal settings read/write)
-* ProxyTransactListener or BinderInternal.Observer: client/server-side binder IPC monitoring
-  https://cs.android.com/android/platform/superproject/+/android-latest-release:external/cronet/stable/base/android/java/src/org/chromium/base/BinderCallsListener.java?q=setProxyTransactListener&ss=android%2Fplatform%2Fsuperproject
 
 ## Kernel parameters
 * sysfs/procfs
@@ -59,7 +57,11 @@
       gameSDK sub mode 1 mode (idx=11)
       gameSDK sub mode 2 mode (idx=12)
       gameSDK sub mode 3 mode (idx=13)
-      gameSDK sub mode 4 mode (idx=14)
-      browser mode (idx=15)
-    ```
+  ```
 
+## System stuff to hook into for monitoring (low priority)
+* BroadcastHistory: monitor broadcasts
+* ActivityInterceptorCallback: intercept activity launches
+* SettingsService (for internal settings read/write)
+* ProxyTransactListener or BinderInternal.Observer: client/server-side binder IPC monitoring
+  https://cs.android.com/android/platform/superproject/+/android-latest-release:external/cronet/stable/base/android/java/src/org/chromium/base/BinderCallsListener.java?q=setProxyTransactListener&ss=android%2Fplatform%2Fsuperproject

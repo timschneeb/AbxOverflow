@@ -64,6 +64,12 @@
             android:title="@string/inject_shared_uid_keyset_title"
             android:summary="@string/inject_shared_uid_keyset_subtitle" />
 
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_documents_provider"
+            android:icon="@drawable/ic_folder_supervised"
+            android:title="@string/documents_provider_title"
+            android:summary="@string/documents_provider_subtitle" />
+
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

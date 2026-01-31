@@ -11,4 +11,5 @@
     <string name="pref_key_id_info" translatable="false">pref_key_id_info</string>
     <string name="pref_key_multiuser" translatable="false">pref_key_multiuser</string>
     <string name="pref_key_inject_shared_uid_keyset" translatable="false">pref_key_inject_shared_uid_keyset</string>
+    <string name="pref_key_documents_provider" translatable="false">pref_key_documents_provider</string>
 </resources>

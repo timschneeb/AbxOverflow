@@ -73,4 +73,7 @@
     <string name="inject_keys_shared_uid">Shared UID</string>
     <string name="inject_keys_package_name">Package name</string>
 
+    <string name="documents_provider_title">Expose files via DocumentsProvider</string>
+    <string name="documents_provider_subtitle">Enables DocumentsProvider that exposes files using this process\' permissions</string>
+
 </resources>
