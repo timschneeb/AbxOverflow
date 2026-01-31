@@ -21,22 +21,37 @@ class SystemProcessTrampolineActivity : Activity() {
         @SuppressLint("UnsafeIntentLaunch")
         val intent = intent.getParcelableExtraCompat<Intent>(EXTRA_TARGET_INTENT)
         val explicitProcess = getIntent().getStringExtra(EXTRA_EXPLICIT_PROCESS)
+        val uid = getIntent().getIntExtra(EXTRA_TARGET_UID, Process.myUid())
         val selectProcess = getIntent().getBooleanExtra(EXTRA_SELECT_PROCESS, false)
 
+        Log.d(
+            TAG,
+            "Trampoline started with uid=$uid, explicitProcess=$explicitProcess, selectProcess=$selectProcess"
+        )
+
+        if (uid != Process.myUid() && !selectProcess && explicitProcess == null) {
+            Log.e(TAG, "Process name not specified for different uid. Finishing")
+            finish()
+            return
+        }
+
         if (intent == null) {
+            Log.e(TAG, "No target intent provided, finishing")
             finish()
             return
         }
 
         try {
             if (explicitProcess != null) {
-                ProcessActivityLauncher.launch(this, intent, Process.myUid(), explicitProcess)
+                ProcessActivityLauncher.launch(this, intent, uid, explicitProcess)
+                Log.d(TAG, "Launched activity in explicit process: $explicitProcess")
                 finish()
             } else if (selectProcess) {
-                selectProcessAndLaunch(intent)
+                selectProcessAndLaunch(intent, uid)
                 // Do not finish here, wait for user selection
             } else {
                 startActivity(intent)
+                Log.d(TAG, "Launched activity in current process")
                 finish()
             }
         } catch (e: Exception) {
@@ -46,8 +61,8 @@ class SystemProcessTrampolineActivity : Activity() {
         }
     }
 
-    private fun selectProcessAndLaunch(intent: Intent) {
-        val processes = ProcessLocator.listActiveProcessNamesForUid(Process.myUid())
+    private fun selectProcessAndLaunch(intent: Intent, uid: Int) {
+        val processes = ProcessLocator.listActiveProcessNamesForUid(uid)
             .sortedBy { it }
             .toTypedArray()
 
@@ -72,14 +87,16 @@ class SystemProcessTrampolineActivity : Activity() {
     companion object {
         private const val TAG = "DroppedAPK"
 
-        const val EXTRA_EXPLICIT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_EXPLICIT_PROCESS"
-        const val EXTRA_TARGET_INTENT: String = "${BuildConfig.APPLICATION_ID}.EXTRA_TARGET_INTENT"
-        const val EXTRA_SELECT_PROCESS: String = "${BuildConfig.APPLICATION_ID}.EXTRA_SELECT_PROCESS"
+        val COMMON_NAMESPACE: String = BuildConfig.APPLICATION_ID.substringBeforeLast('.')
+        val EXTRA_EXPLICIT_PROCESS: String = "$COMMON_NAMESPACE.EXTRA_EXPLICIT_PROCESS"
+        val EXTRA_TARGET_INTENT: String = "$COMMON_NAMESPACE.EXTRA_TARGET_INTENT"
+        val EXTRA_TARGET_UID: String = "$COMMON_NAMESPACE.EXTRA_TARGET_UID"
+        val EXTRA_SELECT_PROCESS: String = "$COMMON_NAMESPACE.EXTRA_SELECT_PROCESS"
 
         val component: ComponentName =
             ComponentName(
                 // We must specifically access the system process variant, otherwise we can't get system_server access
-                "${BuildConfig.APPLICATION_ID.substringBeforeLast('.')}.system",
+                "$COMMON_NAMESPACE.system",
                 SystemProcessTrampolineActivity::class.java.name
             )
     }

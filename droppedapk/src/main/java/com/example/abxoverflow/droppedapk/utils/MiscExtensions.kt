@@ -26,8 +26,11 @@ val currentProcessName: String
 val isSystemServer: Boolean
     get() = currentProcessName == "system_server"
 
+val isSystemUid: Boolean
+    get() = Process.myUid() == 1000
+
 val Context.canEditPersistProperties: Boolean
-get() = (Process.myUid() == 1000 || packageSeInfo.contains("privapp")) && !seInfo.contains(":shell:")
+get() = (isSystemUid || packageSeInfo.contains("privapp")) && !seInfo.contains(":shell:")
 
 val Context.packageSeInfo: String
     get() = runCatching {

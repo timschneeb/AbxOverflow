@@ -42,8 +42,14 @@
             android:process="system"
             android:enabled="${HAS_SYSTEM_SERVER}"
             android:exported="true"
+            android:systemUserOnly="false"
             android:theme="@style/Theme.Transparent"
-            android:showWhenLocked="true">
+            android:showWhenLocked="true"
+            tools:ignore="UnusedAttribute">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <receiver

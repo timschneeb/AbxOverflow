@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Process
 import android.util.Log
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_UID
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
 import com.example.abxoverflow.droppedapk.fragment.DebugAppListFragment
 import com.example.abxoverflow.droppedapk.fragment.InstallSourceAppListFragment
@@ -125,6 +127,7 @@ class MainActivity : AppCompatActivity() {
                         Intent()
                             .setComponent(SystemProcessTrampolineActivity.component)
                             .putExtra(EXTRA_EXPLICIT_PROCESS, explicitProcess)
+                            .putExtra(EXTRA_TARGET_UID, Process.myUid())
                             .putExtra(EXTRA_TARGET_INTENT, intent)
                     )
                 } else {

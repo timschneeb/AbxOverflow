@@ -23,6 +23,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_EXPLICIT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_SELECT_PROCESS
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
+import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_UID
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.SignatureInjector
 import com.example.abxoverflow.droppedapk.utils.canEditPersistProperties
@@ -100,14 +101,19 @@ class RootFragment : BasePreferenceFragment() {
         }
 
         switchPref.setOnPreferenceClickListener {
+            val c = SystemProcessTrampolineActivity.component
+            Log.d(TAG, "Launching SystemProcessTrampolineActivity via $c")
+
             startActivity(
-                Intent()
-                    .setComponent(SystemProcessTrampolineActivity.component)
+                Intent(Intent.ACTION_MAIN)
+                    .setComponent(c)
+                    .putExtra(EXTRA_TARGET_UID, Process.myUid())
                     .putExtra(EXTRA_SELECT_PROCESS, true)
                     .putExtra(
                         EXTRA_TARGET_INTENT,
                         Intent(requireContext(), MainActivity::class.java)
                     )
+                    .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             )
             true
         }
