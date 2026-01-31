@@ -153,7 +153,7 @@ class RootFragment : BasePreferenceFragment() {
                 // Only Samsung devices have accessible persist.* properties for multiuser. AOSP only has fw.*
                 summary = getString(R.string.samsung_only_feature)
                 isEnabled = false
-            } else if (context.canEditPersistProperties) {
+            } else if (!context.canEditPersistProperties) {
                 summary = getString(R.string.system_only_feature)
                 isEnabled = false
             }

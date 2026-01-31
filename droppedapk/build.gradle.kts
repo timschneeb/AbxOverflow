@@ -51,6 +51,7 @@ android {
 
                 // TODO
                 manifestPlaceholders["DEFAULT_PROCESS"] = if (name == "android.uid.systemui") "com.android.systemui"
+                else if (name == "android.uid.shell") "com.android.shell"
                 else if (name.startsWith("android.uid.")) name.removePrefix("android.uid.")
                 else name
 
@@ -83,6 +84,7 @@ android {
         addShared("android.uid.spay") // 5279
         // User shared UIDs (10000+)
         addShared("android.uid.systemui") // 10048
+        addShared("android.uid.shared") // 10057
         addShared("com.sec.android.mimage.avatarstickers") // 10063
         addShared("android.media") // 10068
         addShared("com.samsung.android.app.cameraspecialshootingmodeviewer") // 10071
