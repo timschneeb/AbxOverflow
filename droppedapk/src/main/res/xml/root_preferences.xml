@@ -28,6 +28,12 @@
             android:title="@string/switch_process_title"
             android:summary="@string/switch_process_subtitle" />
 
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:title="@string/pref_category_mods_title">
+
         <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_internal_dex"
             android:icon="@drawable/ic_cast"

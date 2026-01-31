@@ -6,6 +6,7 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Process
+import android.os.ServiceManager
 import android.system.Os
 import android.util.Log
 import android.view.Menu
@@ -24,6 +25,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
 import com.example.abxoverflow.droppedapk.utils.SignatureInjector
+import com.example.abxoverflow.droppedapk.utils.canEditPersistProperties
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.executeShell
 import com.example.abxoverflow.droppedapk.utils.executeShellCatching
@@ -148,7 +150,11 @@ class RootFragment : BasePreferenceFragment() {
 
         multiuserPref.apply {
             if (!isSamsungDevice) {
+                // Only Samsung devices have accessible persist.* properties for multiuser. AOSP only has fw.*
                 summary = getString(R.string.samsung_only_feature)
+                isEnabled = false
+            } else if (context.canEditPersistProperties) {
+                summary = getString(R.string.system_only_feature)
                 isEnabled = false
             }
 
@@ -174,21 +180,15 @@ class RootFragment : BasePreferenceFragment() {
             }
         }
 
-        injectSharedUidKeysPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            context?.let { ctx ->
-                try {
-                    SignatureInjector.inject(mapOf("com.example.abxoverflow.droppedapk.com_samsung_accessory_wmanager" to 10327))
-                } catch (e: Exception) {
-                    if (e is IllegalAccessException) {
-                        // Used by the injector to kill system_server to apply changes
-                        throw e
-                    }
-
-                    ctx.showAlert(getString(R.string.error), e.stackTraceToString())
-                }
+        injectSharedUidKeysPref.apply {
+            if (!isSystemServer) {
+                summary = getString(R.string.system_server_only_feature)
+                isEnabled = false
             }
-
-            true
+            onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                SignatureInjector.showDialog(context)
+                true
+            }
         }
 
         refreshInfo()
@@ -309,7 +309,7 @@ class RootFragment : BasePreferenceFragment() {
     @SuppressLint("MissingPermission")
     private fun performUninstall() {
         try {
-            val packManImplService: Any = android.os.ServiceManager.getService("package")
+            val packManImplService: Any = ServiceManager.getService("package")
             val packManService = packManImplService.javaClass.getDeclaredField("this$0").run {
                 isAccessible = true
                 get(packManImplService)

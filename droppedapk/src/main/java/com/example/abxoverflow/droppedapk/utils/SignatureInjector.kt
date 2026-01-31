@@ -1,9 +1,23 @@
 package com.example.abxoverflow.droppedapk.utils
 
+import android.content.Context
 import android.os.ServiceManager
+import android.system.Os
 import android.util.Log
+import android.util.SparseArray
+import android.view.LayoutInflater
+import android.widget.AutoCompleteTextView
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.SimpleAdapter
+import androidx.core.util.valueIterator
+import com.example.abxoverflow.droppedapk.R
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import io.github.kyuubiran.ezxhelper.core.finder.MethodFinder.`-Static`.methodFinder
 import io.github.kyuubiran.ezxhelper.core.helper.ObjectHelper.`-Static`.objectHelper
+import me.timschneeberger.reflectionexplorer.utils.cast
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import java.io.ByteArrayOutputStream
@@ -45,7 +59,130 @@ object SignatureInjector {
         }
 
         // Crash system_server
+        Os.kill(Os.getpid(), 9)
         throw IllegalAccessException()
+    }
+
+    fun showDialog(ctx: Context) {
+        val uidMap = try {
+            ServiceManager.getService("package")
+                .objectHelper()
+                .getObject("this$0")!!
+                .objectHelper()
+                .getObject("mSettings")!!
+                .objectHelper()
+                .getObject("mAppIds")!!
+                .let { appIds ->
+                    val nonSystem = appIds.objectHelper()
+                        .getObject("mNonSystemSettings")!!
+                        .objectHelper()
+                        .getObject("mStorage")!!
+                        .cast<ArrayList<Any?>>() // ArrayList<PackageSetting|SharedUserSetting>
+                        .filterNotNull()
+                        .filter { it.javaClass.name == "com.android.server.pm.SharedUserSetting" }
+
+                    val system = appIds.objectHelper()
+                        .getObject("mSystemSettings")!!
+                        .objectHelper()
+                        .getObject("mStorage")!!
+                        .cast<SparseArray<Any?>>() // SparseArray<SharedUserSetting>
+                        .valueIterator()
+                        .asSequence()
+                        .filterNotNull()
+                        .filter { it.javaClass.name == "com.android.server.pm.SharedUserSetting" }
+
+                    (system + nonSystem).associate {
+                        val uid = it.objectHelper().getObject("mAppId")!! as Int
+                        val name = it.objectHelper().getObject("name")!! as String
+                        uid to name
+                    }.apply {
+                        // Exclude Google Play Services to avoid GMS and all GMS-dependent apps from breaking.
+                        // GMS seems to do extended signature checks that may detect our injection.
+                        filterNot { it.value == "com.google.android.gms" }.toSortedMap()
+                    }
+                }
+        }
+        catch (e: Exception) {
+            ctx.showAlert(ctx.getString(R.string.error), "Failed to retrieve shared UIDs:\n${e.stackTraceToString()}")
+            return
+        }
+
+        // Inflate dialog layout
+        val inflater = LayoutInflater.from(ctx)
+        val dialogView = inflater.inflate(R.layout.dialog_inject_shared_uid_keys, null)
+        val rowContainer = dialogView.findViewById<LinearLayout>(R.id.row_container)
+        val addRowButton = dialogView.findViewById<MaterialButton>(R.id.add_row_button)
+
+        fun addRow(pkg: String? = null, selectedUid: String? = null) {
+            val row = inflater.inflate(R.layout.item_shared_uid_row, rowContainer, false)
+            val pkgInput = row.findViewById<TextInputEditText>(R.id.pkg_name_input)
+            val uidDropdown = row.findViewById<AutoCompleteTextView>(R.id.shared_uid_dropdown)
+            val removeBtn = row.findViewById<ImageButton>(R.id.remove_row_button)
+
+            pkgInput.setText(pkg ?: "")
+
+            val adapter = SimpleAdapter(
+                ctx,
+                uidMap.entries.map {
+                    mapOf(
+                        "line1" to it.value,
+                        "line2" to it.key.toString()
+                    )
+                },
+                android.R.layout.simple_list_item_2,
+                arrayOf("line1", "line2"),
+                intArrayOf(android.R.id.text1, android.R.id.text2),
+            )
+            uidDropdown.setAdapter(adapter)
+
+            uidDropdown.setOnItemClickListener { parent, _, position, _ ->
+                val item = parent.adapter.getItem(position) as? Map<*, *>
+                val display = item?.get("line2") ?: item?.get("line1") ?: item
+                uidDropdown.setText(display.toString(), false)
+                uidDropdown.tag = uidMap.entries.elementAt(position).key
+            }
+            if (selectedUid != null) uidDropdown.setText(selectedUid, false)
+
+            removeBtn.setOnClickListener { rowContainer.removeView(row) }
+
+            rowContainer.addView(row)
+        }
+
+        // Add one initial row
+        addRow()
+
+        addRowButton.setOnClickListener { addRow() }
+
+        val dialog = MaterialAlertDialogBuilder(ctx)
+            .setTitle(ctx.getString(R.string.inject_shared_uid_keyset_title))
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                // Collect entries and call injector
+                val map = mutableMapOf<String, Int>()
+                for (i in 0 until rowContainer.childCount) {
+                    val row = rowContainer.getChildAt(i)
+                    val pkgInput = row.findViewById<TextInputEditText>(R.id.pkg_name_input)
+                    val uidDropdown = row.findViewById<AutoCompleteTextView>(R.id.shared_uid_dropdown)
+                    val pkgName = pkgInput.text?.toString()?.trim().orEmpty()
+                    val uid = uidDropdown.tag as? Int
+                    if (pkgName.isNotEmpty() && uid != null) {
+                        map[pkgName] = uid
+                    }
+                }
+
+                if (map.isNotEmpty()) {
+                    try {
+                        inject(map)
+                    } catch (e: Exception) {
+                        if (e is IllegalAccessException) throw e
+                        ctx.showAlert(ctx.getString(R.string.error), e.stackTraceToString())
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+
+        dialog.show()
     }
 
     private fun insertItems(
@@ -127,7 +264,7 @@ object SignatureInjector {
             for (i in 0..<childNodes.length) {
                 val item = childNodes.item(i)
                 if (item is Element && "pastSigs" == item.nodeName) {
-                    //sharedUser.removeChild(item)
+                    sharedUser.removeChild(item)
                     continue@deletePastSigsLoop
                 }
             }

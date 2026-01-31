@@ -7,6 +7,7 @@
     <string name="frida_gadget_load_failed">Failed to load frida-gadget-android library: %1$s</string>
     <string name="shizuku_is_system_server">Shizuku cannot be launched from system_server</string>
     <string name="system_server_only_feature">This feature is only available when running within system_server</string>
+    <string name="system_only_feature">This feature is only available when running as system user</string>
     <string name="reboot_required">Reboot required to apply changes</string>
     <string name="samsung_only_feature">This feature is only available on Samsung devices</string>
 
@@ -45,6 +46,7 @@
     <string name="process_switcher_title">Select process to switch to…</string>
 
     <string name="pref_category_actions_title">Actions</string>
+    <string name="pref_category_mods_title">Mods</string>
     <string name="pref_category_info_title">Info</string>
 
     <string name="debug_app_list_title">Debuggable apps</string>
@@ -65,5 +67,10 @@
 
     <string name="inject_shared_uid_keyset_title">Inject shared UID keyset</string>
     <string name="inject_shared_uid_keyset_subtitle">Allows installing self-signed packages in shared system UID groups</string>
+    <string name="inject_keys_add_row">Add row</string>
+    <string name="inject_keys_keystore_info">This operation will inject custom signing keys for a shared user id. Use the keystore provided in the GitHub repo to sign your app. The password for it is \'abxdroppedapk\'.\n\nWarning: This operation will intentionally freeze and crash the system! Be patient.</string>
+    <string name="inject_keys_remove_row">Remove row</string>
+    <string name="inject_keys_shared_uid">Shared UID</string>
+    <string name="inject_keys_package_name">Package name</string>
 
 </resources>

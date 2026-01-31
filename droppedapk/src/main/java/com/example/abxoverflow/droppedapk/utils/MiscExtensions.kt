@@ -26,6 +26,9 @@ val currentProcessName: String
 val isSystemServer: Boolean
     get() = currentProcessName == "system_server"
 
+val Context.canEditPersistProperties: Boolean
+    get() = Process.myUid() == 1000 || packageSeInfo.contains("privapp")
+
 val Context.packageSeInfo: String
     get() = runCatching {
         (packageManager.getApplicationInfo(packageName, 0)
@@ -52,7 +55,6 @@ fun executeShellCatching(cmdline: String): String = runCatching {
 
 fun executeShell(cmdline: String): String =
     Runtime.getRuntime().exec(cmdline).readAllToString()
-
 
 fun java.lang.Process?.readAllToString(): String = StringBuilder().let {
     it.append(this?.inputStream.readToString(isError = false))
@@ -87,7 +89,7 @@ inline fun <reified T : Parcelable> Intent.getParcelableExtraCompat(key: String)
 fun View.setBackgroundFromAttribute(@AttrRes attrRes: Int) {
     val a = TypedValue()
     context.theme.resolveAttribute(attrRes, a, true)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && a.isColorType) {
+    if (a.isColorType) {
         setBackgroundColor(a.data)
     } else {
         background = ResourcesCompat.getDrawable(context.resources, a.resourceId, context.theme)

@@ -146,14 +146,29 @@ object InstanceProvider : ReflectionExplorer.IInstancesProvider {
 
         // Get all system services hosted in this process
         runCollector("system services") {
+            var lastException: Exception? = null
+
             ServiceManager
                 .listServices()
                 .mapNotNull { name ->
-                    ServiceManager.getService(name)
-                        ?.let { Instance(it, name, Group("System Services", null)) }
+                    try {
+                        ServiceManager.getService(name)
+                            ?.let { Instance(it, name, Group("System Services", null)) }
+                    }
+                    catch (e: Exception) {
+                        Log.w(TAG, "Failed to get system service instance for $name", e)
+                        lastException = e
+                        null
+                    }
                 }
                 .filter { it.instance.javaClass.name != "android.os.BinderProxy" }
                 .let(instances::addAll)
+
+            // If we encountered exceptions, re-throw the last one to signal failure
+            // Try to get as many services as possible even if some fail
+            if (lastException != null) {
+                throw lastException
+            }
         }
 
         Log.e(TAG, "Provided ${instances.size} instances")
