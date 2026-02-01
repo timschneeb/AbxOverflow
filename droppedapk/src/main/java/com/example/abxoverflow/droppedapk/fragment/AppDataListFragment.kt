@@ -58,102 +58,86 @@ class AppDataListFragment : BaseAppListFragment() {
 
     override fun onAppClicked(target: View, pkg: String) {}
 
-    override fun bindToolButtons(holder: VH, pkg: String): List<View>? =
-        holder.itemView.context?.let { ctx ->
-            listOf(
-                newIconButton(
-                    contentDescription = getString(R.string.app_data_import),
-                    iconRes = R.drawable.ic_download
-                ) {
-                    try {
-                        // TODO: Add "clean restore" option as dialog
-                        val isCleanRestore = false
+    override fun bindToolButtons(holder: VH, pkg: String): List<View> = listOf(
+            newIconButton(
+                contentDescription = getString(R.string.app_data_import),
+                iconRes = R.drawable.ic_download
+            ) {
+                // TODO: Add "clean restore" option as dialog
+                val isCleanRestore = false
+                executeTransfer(pkg, isExport = false, isCleanRestore)
+            },
+            newIconButton(
+                contentDescription = getString(R.string.app_data_export),
+                iconRes = R.drawable.ic_upload
+            ) {
+                executeTransfer(pkg, isExport = true)
+            }
+        )
 
-                        val temp = writableTempDir(pkg, false)
-                        val tempDe = writableTempDir(pkg, true)
+    private fun executeTransfer(pkg: String, isExport: Boolean, cleanRestore: Boolean = false) {
+        try {
+            val temp = writableTempDir(pkg, false)
+            val tempDe = writableTempDir(pkg, true)
 
-                        ShizukuWrapper.ensureRunAs()
+            ShizukuWrapper.ensureRunAs()
 
-                        if (!File("$backupDir/$pkg").exists()) {
-                            ctx.showAlert(
-                                title = ctx.getString(R.string.error),
-                                message = getString(
-                                    R.string.no_data_backup_found,
-                                    pkg,
-                                    backupDir,
-                                    pkg
-                                )
-                            )
-                            return@newIconButton
-                        }
+            // TODO: Add progress dialog & dont block UI thread
 
-                        // TODO: show progress dialog
+            var errors = ""
+            if (isExport) {
+                runShell("mkdir -p $temp; mkdir -p $tempDe")
 
-                        // copy from sdcard to public temp location first
-                        runShell("run-as $pkg mkdir -p $temp")
-                        runShell("run-as $pkg mkdir -p $tempDe")
-                        runShell(
-                            "cp -r $backupDir/$pkg/private_data/. $temp; " +
-                                    "cp -r $backupDir/$pkg/private_data_de/. $tempDe"
-                        )
+                // export: copy app data directory recursively to the sdcard location
 
-                        var errors = ""
-                        if (isCleanRestore) {
-                            // clean restore: delete existing data first
-                            errors += runShell("run-as $pkg sh -c 'rm -rf /data/data/$pkg/*'", false)
-                            errors += runShell("run-as $pkg sh -c 'rm -rf /data/user_de/0/$pkg/*'", false)
-                        }
+                errors += runShell("run-as $pkg sh -c 'cp -r /data/data/$pkg/. $temp'", false)
+                errors += runShell("run-as $pkg sh -c 'cp -r /data/user_de/0/$pkg/. $tempDe'", false)
+                errors += runShell("run-as $pkg sh -c 'chmod -R 777 $temp'", false)
+                errors += runShell("run-as $pkg sh -c 'chmod -R 777 $tempDe'", false)
 
-                        // import: copy recursively from sdcard location into the app data dir
-                        // command executed as the app user via run-as so it can write into its data dir
-                        errors += runShell("run-as $pkg sh -c 'cp -r $temp/. /data/data/$pkg/'", false)
-                        errors += runShell("run-as $pkg sh -c 'cp -r $tempDe/. /data/user_de/0/$pkg/'", false)
+                // move to sdcard (ensure target exists)
+                errors += runShell("rm -rf '$backupDir/$pkg/'; mkdir -p '$backupDir/$pkg/'; " +
+                        "mv -f $temp $backupDir/$pkg/; mv -f $tempDe $backupDir/$pkg", false)
 
-                        if (errors.isNotBlank())
-                            ctx.showAlert(
-                                title = getString(R.string.warnings),
-                                message = getString(R.string.shizuku_shell_warnings, errors)
-                            )
-                    }
-                    catch (_: ShizukuWrapper.InvalidShizukuStateException) {
-                        // Handled in ShizukuWrapper
-                    }
-                },
-                newIconButton(
-                    contentDescription = getString(R.string.app_data_export),
-                    iconRes = R.drawable.ic_upload
-                ) {
-                    try {
-                        val temp = writableTempDir(pkg, false)
-                        val tempDe = writableTempDir(pkg, true)
-
-                        ShizukuWrapper.ensureRunAs()
-
-                        runShell("mkdir -p $temp; mkdir -p $tempDe")
-
-                        // export: copy app data directory recursively to the sdcard location
-                        var errors = ""
-                        errors += runShell("run-as $pkg sh -c 'cp -r /data/data/$pkg/. $temp'", false)
-                        errors += runShell("run-as $pkg sh -c 'cp -r /data/user_de/0/$pkg/. $tempDe'", false)
-                        errors += runShell("run-as $pkg sh -c 'chmod -R 777 $temp'", false)
-                        errors += runShell("run-as $pkg sh -c 'chmod -R 777 $tempDe'", false)
-
-                        // move to sdcard (ensure target exists)
-                        errors += runShell("rm -rf '$backupDir/$pkg/'; mkdir -p '$backupDir/$pkg/'; " +
-                                "mv -f $temp $backupDir/$pkg/; mv -f $tempDe $backupDir/$pkg", false)
-
-                        if (errors.isNotBlank())
-                            ctx.showAlert(
-                                title = getString(R.string.warnings),
-                                message = getString(R.string.shizuku_shell_warnings, errors)
-                            )
-                    }
-                    catch (_: ShizukuWrapper.InvalidShizukuStateException) {
-                        // Handled in ShizukuWrapper
-                    }
+            } else {
+                if (!File("$backupDir/$pkg").exists()) {
+                    context?.showAlert(
+                        getString(R.string.error),
+                        getString(R.string.no_data_backup_found, pkg, backupDir, pkg)
+                    )
+                    return
                 }
-            )
+
+                // copy from sdcard to public temp location first
+                runShell("run-as $pkg mkdir -p $temp")
+                runShell("run-as $pkg mkdir -p $tempDe")
+                runShell(
+                    "cp -r $backupDir/$pkg/private_data/. $temp; " +
+                            "cp -r $backupDir/$pkg/private_data_de/. $tempDe"
+                )
+
+                if (cleanRestore) {
+                    // clean restore: delete existing data first
+                    errors += runShell("run-as $pkg sh -c 'rm -rf /data/data/$pkg/*'", false)
+                    errors += runShell("run-as $pkg sh -c 'rm -rf /data/user_de/0/$pkg/*'", false)
+                }
+
+                // import: copy recursively from sdcard location into the app data dir
+                // command executed as the app user via run-as so it can write into its data dir
+                errors += runShell("run-as $pkg sh -c 'cp -r $temp/. /data/data/$pkg/'", false)
+                errors += runShell("run-as $pkg sh -c 'cp -r $tempDe/. /data/user_de/0/$pkg/'", false)
+            }
+
+            if (errors.isNotBlank())
+                context?.showAlert(
+                    title = getString(R.string.warnings),
+                    message = getString(R.string.shizuku_shell_warnings, errors)
+                )
         }
+        catch (_: ShizukuWrapper.InvalidShizukuStateException) {
+            // Handled in ShizukuWrapper
+        }
+    }
 
     private fun newIconButton(
         contentDescription: String,
