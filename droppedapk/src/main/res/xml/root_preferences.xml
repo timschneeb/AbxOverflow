@@ -28,6 +28,11 @@
             android:title="@string/switch_process_title"
             android:summary="@string/switch_process_subtitle" />
 
+        <androidx.preference.Preference
+            android:key="@string/pref_key_app_data_transfer"
+            android:icon="@drawable/ic_drive_file_move"
+            android:title="@string/app_data_transfer_title"
+            android:summary="@string/app_data_transfer_subtitle" />
 
     </androidx.preference.PreferenceCategory>
 

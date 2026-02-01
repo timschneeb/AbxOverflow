@@ -14,6 +14,7 @@
     <!-- Set a system app with uid 1000 like "com.sec.android.diagmonagent" to run with system_app SE context with access to sdcard and laxer executable permissions -->
     <application
         android:allowBackup="true"
+        android:name=".InjectedApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="${APP_LABEL}"
         android:theme="@style/Theme.DroppedApk"
@@ -41,6 +42,22 @@
             android:name=".SystemProcessTrampolineActivity"
             android:process="system"
             android:enabled="${HAS_SYSTEM_SERVER}"
+            android:exported="true"
+            android:systemUserOnly="false"
+            android:theme="@style/Theme.Transparent"
+            android:showWhenLocked="true"
+            tools:ignore="UnusedAttribute">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Activity running in the system process able to switch processes -->
+        <activity
+            android:name=".ShellDataCopyActivity"
+            android:process="com.android.shell"
+            android:enabled="${IS_SHELL}"
             android:exported="true"
             android:systemUserOnly="false"
             android:theme="@style/Theme.Transparent"
@@ -83,6 +100,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </provider>
+
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:multiprocess="false"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
     </application>
 
 </manifest>

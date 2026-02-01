@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import android.widget.LinearLayout
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -39,6 +40,9 @@ abstract class BaseAppListFragment : Fragment() {
     abstract fun queryPackageStatus(pkgName: String): String
 
     abstract fun onAppClicked(target: View, pkg: String)
+
+    // Child classes may override this to provide per-row tool views (right aligned).
+    protected open fun bindToolButtons(holder: VH, pkg: String): List<View>? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         FragmentAppListBinding.inflate(inflater, container, false).also {
@@ -133,6 +137,28 @@ abstract class BaseAppListFragment : Fragment() {
                     )
                 } catch (_: Exception) {
                     pkgIcon.setImageResource(android.R.drawable.sym_def_app_icon)
+                }
+
+                // Populate optional tool buttons on the right, if provided by child class.
+                val toolContainer = root.findViewById<LinearLayout>(R.id.tool_container)
+                toolContainer.removeAllViews()
+                val tools = bindToolButtons(holder, pkg)
+                if (!tools.isNullOrEmpty()) {
+                    // Add provided tool views and make container visible
+                    tools.forEach { v ->
+                        // Ensure proper layout params for horizontal container
+                        if (v.layoutParams == null) {
+                            v.layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            )
+                        }
+                        toolContainer.addView(v)
+                    }
+                    toolContainer.visibility = View.VISIBLE
+                } else {
+                    // Hide container when no tools are present to preserve existing layout
+                    toolContainer.visibility = View.GONE
                 }
             }
 

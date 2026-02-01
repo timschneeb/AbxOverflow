@@ -175,7 +175,7 @@ object SignatureInjector {
                         inject(map)
                     } catch (e: Exception) {
                         if (e is IllegalAccessException) throw e
-                        ctx.showAlert(ctx.getString(R.string.error), e.stackTraceToString())
+                        ctx.showAlert(e)
                     }
                 }
             }

@@ -19,6 +19,14 @@ fun Context.showAlert(@StringRes title: Int, @StringRes message: Int) {
     showAlert(getString(title), getString(message))
 }
 
+fun Context.showAlert(e: Throwable) {
+    MaterialAlertDialogBuilder(this)
+        .setTitle(getString(R.string.error))
+        .setMessage(e.stackTraceToString())
+        .setPositiveButton(android.R.string.ok, null)
+        .show()
+}
+
 fun Context.showAlert(title: String, message: String) {
     MaterialAlertDialogBuilder(this)
         .setTitle(title)

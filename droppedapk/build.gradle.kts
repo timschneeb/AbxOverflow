@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.parcelize")
 }
 
 android {
@@ -48,6 +49,7 @@ android {
                 manifestPlaceholders["SHARED_USER_ID"] = name
                 manifestPlaceholders["APP_LABEL"] = simpleName
                 manifestPlaceholders["HAS_SYSTEM_SERVER"] = if (name == "android.uid.system") "true" else "false"
+                manifestPlaceholders["IS_SHELL"] = if (name == "android.uid.shell") "true" else "false"
 
                 // TODO
                 manifestPlaceholders["DEFAULT_PROCESS"] = if (name == "android.uid.systemui") "com.android.systemui"
@@ -108,6 +110,7 @@ android {
     buildFeatures {
         buildConfig = true
         viewBinding = true
+        aidl = true
     }
 
     buildTypes {
@@ -141,4 +144,6 @@ dependencies {
     implementation(libs.refine.runtime)
     compileOnly(project(":droppedapk:hidden-api"))
 
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
 }

@@ -8,10 +8,6 @@
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
 * Needs resource overlay to add XML file to res/xml (check if possible)
 
-## Feature flags
-* https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/core/java/android/util/FeatureFlagUtils.java?q=case:y%20%22SystemProperties.get%22%20-ro%5C.%20file:.java%20-file:test%20-file:AdServices%20-file:Car%20-file:hiddenapi%20-file:cts&ss=android%2Fplatform%2Fsuperproject&start=101
-* https://cs.android.com/android/platform/superproject/+/android-latest-release:frameworks/base/packages/SystemUI/src/com/android/systemui/flags/Flags.kt
-
 ## Launch trampoline
 * Apps without running processes (e.g com.android.shell) cannot be launched from the home screen.
 * Add trampoline home activity
@@ -20,11 +16,9 @@
 * Allow text input of class to get a list of static methods/fields
 * Implement search algorithm for static methods/fields
 
-## SystemUI
-* Dumpables
-* Tunables
-
 ## Other ideas
+* Option to start ADB over TCP
+* UI toggle for shizuku autostart
 * JVMTI agent can be attached to system_server. Other apps need to be debuggable.
 * selinux parser to find interesting Samsung OEM modifications from CIL
 * PackageManagerServiceUtils

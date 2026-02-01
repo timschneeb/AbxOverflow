@@ -49,6 +49,7 @@ class RootFragment : BasePreferenceFragment() {
     private val dexPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_internal_dex))!! }
     private val switchPref: Preference by lazy { findPreference(getString(R.string.pref_key_switch_process))!! }
     private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_debug_app_list))!! }
+    private val appDataTransferPref: Preference by lazy { findPreference(getString(R.string.pref_key_app_data_transfer))!! }
     private val installSourcePref: Preference by lazy { findPreference(getString(R.string.pref_key_install_source))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
     private val infoIdPref: Preference by lazy { findPreference(getString(R.string.pref_key_id_info))!! }
@@ -180,7 +181,7 @@ class RootFragment : BasePreferenceFragment() {
                         executeShell("setprop persist.sys.show_multiuserui 1")
                     }
                 } catch (e: Exception) {
-                    context.showAlert(getString(R.string.error), e.toString())
+                    context.showAlert(e)
                 }
 
                 refreshMultiuserPref()
@@ -208,10 +209,18 @@ class RootFragment : BasePreferenceFragment() {
                 pm.setComponentEnabledSetting(comp, newState, PackageManager.DONT_KILL_APP)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to toggle documents provider", e)
-                requireContext().showAlert(getString(R.string.error), e.toString())
+                requireContext().showAlert(e)
             }
 
             refreshDocumentsProviderPref()
+            true
+        }
+
+        appDataTransferPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.container, AppDataListFragment())
+                .addToBackStack("app_data_transfer")
+                .commit()
             true
         }
 

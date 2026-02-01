@@ -54,7 +54,6 @@
     <string name="debug_app_action_off">Off</string>
     <string name="debug_app_action_run_as">Run-as</string>
     <string name="debug_app_action_debuggable">Debuggable</string>
-    <string name="debug_app_update_failed">Failed to update</string>
 
     <string name="install_source_title">Change installation sources</string>
     <string name="install_source_subtitle">Bypass Play Integrity checks that detects sideloaded apps</string>
@@ -75,5 +74,17 @@
 
     <string name="documents_provider_title">Expose files via DocumentsProvider</string>
     <string name="documents_provider_subtitle">Enables DocumentsProvider that exposes files using this process\' permissions</string>
+    <string name="app_data_import">Import</string>
+    <string name="app_data_export">Export</string>
+    <string name="app_data_transfer_title">App data transfer</string>
+    <string name="app_data_transfer_subtitle">Backup/restore private app data of run-as/debuggable apps</string>
+    <string name="shizuku_permission_not_granted">Shizuku permission not granted. Try again after granting</string>
+    <string name="shizuku_needs_manual_permission">Please grant Shizuku permission manually</string>
+    <string name="shizuku_not_active">Shizuku is not active or running with the incorrect execution context. This feature needs the Shizuku daemon to be launched via ADB or Wireless ADB due to SELinux restrictions. You cannot use this app\'s Shizuku starter for this. If this keeps happening, reboot your phone. It usually happens after installing updates to this app. Do you want to open Shizuku now?</string>
+    <string name="shizuku_error_while_executing_command">Error while executing command: %1$s\n\n%2$s</string>
+    <string name="shizuku_wrong_environment">Shizuku is not active or running with the incorrect execution context. This feature needs the Shizuku daemon to be launched via ADB or Wireless ADB due to SELinux restrictions. You cannot use this app\'s Shizuku starter for this. Do you want to open Shizuku now?</string>
+    <string name="warnings">Warnings</string>
+    <string name="shizuku_shell_warnings">Some warnings were printed while exporting app data:\n%1$s</string>
+    <string name="no_data_backup_found">No data backup found for %1$s in %2$s/%3$s</string>
 
 </resources>

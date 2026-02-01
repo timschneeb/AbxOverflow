@@ -60,9 +60,9 @@ class InstallSourceAppListFragment : BaseAppListFragment() {
                         .invoke(svc, /* sync */ true)
 
                     adapter.removeItem(pkg)
-                    ctx.toast(getString(R.string.install_source_change_success, pkg))
+                    ctx.toast(R.string.install_source_change_success)
                 } catch (e: Exception) {
-                    ctx.showAlert(getString(R.string.error), e.stackTraceToString())
+                    ctx.showAlert(e)
                 }
             }
         }
