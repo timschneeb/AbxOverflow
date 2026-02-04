@@ -218,34 +218,42 @@ class RootFragment : BasePreferenceFragment() {
             true
         }
 
-        appDataTransferPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val pkg = "me.timschneeberger.appdatabackup"
-            requireContext().packageManager.getLaunchIntentForPackage(pkg)?.let {
-                val progressDialog = requireContext().createProgressDialog(getString(R.string.app_data_loading_list))
-
-                // enumerate debuggable packages async and show progress
-                progressDialog.show()
-                Thread {
-                    val debuggablePkgs = try {
-                        DebuggableUtils.getDebuggableOrRunAsPackages()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to get debuggable packages", e)
-                        emptyList()
-                    }
-
-                    requireActivity().runOnUiThread {
-                        progressDialog.dismiss()
-                        it.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        it.setAction("$pkg.APP_DATA_TRANSFER")
-                        it.putStringArrayListExtra("$pkg.package_names", ArrayList(debuggablePkgs))
-                        startActivity(it)
-                    }
-                }.start()
-            } ?: run {
-                context?.showAlert(R.string.error, R.string.app_data_transfer_app_missing)
+        appDataTransferPref.apply {
+            if (!isSystemServer) {
+                summary = getString(R.string.system_server_only_feature)
+                isEnabled = isSystemServer
             }
-            true
+
+            onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                val pkg = "me.timschneeberger.appdatabackup"
+                requireContext().packageManager.getLaunchIntentForPackage(pkg)?.let {
+                    val progressDialog = requireContext().createProgressDialog(getString(R.string.app_data_loading_list))
+
+                    // enumerate debuggable packages async and show progress
+                    progressDialog.show()
+                    Thread {
+                        val debuggablePkgs = try {
+                            DebuggableUtils.getDebuggableOrRunAsPackages()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to get debuggable packages", e)
+                            emptyList()
+                        }
+
+                        requireActivity().runOnUiThread {
+                            progressDialog.dismiss()
+                            it.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            it.setAction("$pkg.APP_DATA_TRANSFER")
+                            it.putStringArrayListExtra("$pkg.package_names", ArrayList(debuggablePkgs))
+                            startActivity(it)
+                        }
+                    }.start()
+                } ?: run {
+                    context.showAlert(R.string.error, R.string.app_data_transfer_app_missing)
+                }
+                true
+            }
         }
+
 
         refreshInfo()
         refreshShizukuPref()
