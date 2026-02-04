@@ -6,7 +6,11 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.text.Editable
 import android.text.InputType
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -14,6 +18,39 @@ import androidx.appcompat.app.AlertDialog
 import com.example.abxoverflow.droppedapk.R
 import com.example.abxoverflow.droppedapk.databinding.DialogTextinputBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import me.timschneeberger.reflectionexplorer.utils.dpToPx
+
+fun Context.createProgressDialog(message: String): AlertDialog {
+    val container = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        setPadding(24.dpToPx(), 16.dpToPx(), 24.dpToPx(), 16.dpToPx())
+        gravity = Gravity.CENTER_VERTICAL
+        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
+
+    container.addView(
+        ProgressBar(this).apply {
+            isIndeterminate = true
+            layoutParams = LinearLayout.LayoutParams(40.dpToPx(), 40.dpToPx()) .apply {
+                rightMargin = 16.dpToPx()
+            }
+        }
+    )
+    container.addView(
+        TextView(this).apply {
+            text = message
+            setTextAppearance(android.R.style.TextAppearance_Large)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+    )
+
+    return MaterialAlertDialogBuilder(this)
+        .setTitle(null)
+        .setView(container)
+        .setCancelable(false)
+        .create()
+}
+
 
 fun Context.showAlert(@StringRes title: Int, @StringRes message: Int) {
     showAlert(getString(title), getString(message))

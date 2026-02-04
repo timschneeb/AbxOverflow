@@ -86,5 +86,7 @@
     <string name="warnings">Warnings</string>
     <string name="shizuku_shell_warnings">Some warnings were printed while exporting app data:\n%1$s</string>
     <string name="no_data_backup_found">No data backup found for %1$s in %2$s/%3$s</string>
+    <string name="app_data_transfer_app_missing">Required app not installed. See https://github.com/timschneeb/debuggable-app-data-backup</string>
+    <string name="app_data_loading_list">Loading run-as/debuggable apps...</string>
 
 </resources>

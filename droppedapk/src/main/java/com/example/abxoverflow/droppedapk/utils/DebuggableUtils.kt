@@ -86,4 +86,39 @@ object DebuggableUtils {
             return PackageMode.ERROR
         }
     }
+
+    /**
+     * Returns all package names that are either fully debuggable or have run-as enabled.
+     * This inspects the package service's mPackages map and filters entries using getPackageState().
+     */
+    fun getDebuggableOrRunAsPackages(): List<String> {
+        try {
+            val svc = ServiceManager.getService("package") ?: return emptyList()
+
+            val packagesMap = svc.objectHelper()
+                .getObject("this$0")!!
+                .objectHelper()
+                .getObject("mSettings")!!
+                .objectHelper()
+                .getObject("mPackages")!!
+                .cast<Map<Any, Any>>()
+
+            val result = ArrayList<String>()
+            for (key in packagesMap.keys) {
+                val pkgName = key as? String ?: continue
+                try {
+                    when (getPackageState(pkgName)) {
+                        PackageMode.DEBUGGABLE, PackageMode.RUN_AS -> result.add(pkgName)
+                        else -> {}
+                    }
+                } catch (_: Exception) {
+                    // ignore individual package errors
+                }
+            }
+            return result
+        } catch (e: Exception) {
+            Log.e("DebuggableUtils", "Failed to enumerate debuggable packages", e)
+            return emptyList()
+        }
+    }
 }

@@ -26,8 +26,10 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_UID
 import com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+import com.example.abxoverflow.droppedapk.utils.DebuggableUtils
 import com.example.abxoverflow.droppedapk.utils.SignatureInjector
 import com.example.abxoverflow.droppedapk.utils.canEditPersistProperties
+import com.example.abxoverflow.droppedapk.utils.createProgressDialog
 import com.example.abxoverflow.droppedapk.utils.currentProcessName
 import com.example.abxoverflow.droppedapk.utils.executeShell
 import com.example.abxoverflow.droppedapk.utils.executeShellCatching
@@ -217,10 +219,31 @@ class RootFragment : BasePreferenceFragment() {
         }
 
         appDataTransferPref.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.container, AppDataListFragment())
-                .addToBackStack("app_data_transfer")
-                .commit()
+            val pkg = "me.timschneeberger.appdatabackup"
+            requireContext().packageManager.getLaunchIntentForPackage(pkg)?.let {
+                val progressDialog = requireContext().createProgressDialog(getString(R.string.app_data_loading_list))
+
+                // enumerate debuggable packages async and show progress
+                progressDialog.show()
+                Thread {
+                    val debuggablePkgs = try {
+                        DebuggableUtils.getDebuggableOrRunAsPackages()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to get debuggable packages", e)
+                        emptyList()
+                    }
+
+                    requireActivity().runOnUiThread {
+                        progressDialog.dismiss()
+                        it.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        it.setAction("$pkg.APP_DATA_TRANSFER")
+                        it.putStringArrayListExtra("$pkg.package_names", ArrayList(debuggablePkgs))
+                        startActivity(it)
+                    }
+                }.start()
+            } ?: run {
+                context?.showAlert(R.string.error, R.string.app_data_transfer_app_missing)
+            }
             true
         }
 
