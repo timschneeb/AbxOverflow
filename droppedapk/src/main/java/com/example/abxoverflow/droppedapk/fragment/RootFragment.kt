@@ -235,7 +235,7 @@ class RootFragment : BasePreferenceFragment() {
 
                     requireActivity().runOnUiThread {
                         progressDialog.dismiss()
-                        it.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        it.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         it.setAction("$pkg.APP_DATA_TRANSFER")
                         it.putStringArrayListExtra("$pkg.package_names", ArrayList(debuggablePkgs))
                         startActivity(it)
