@@ -65,7 +65,8 @@
 
         <receiver
             android:name=".receiver.SystemAppBootReceiver"
-            android:process="com.android.settings"
+            android:process="${SHIZUKU_PROCESS}"
+            android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

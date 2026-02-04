@@ -56,6 +56,9 @@ android {
                 else if (name.startsWith("android.uid.")) name.removePrefix("android.uid.")
                 else name
 
+                manifestPlaceholders["SHIZUKU_PROCESS"] = if (name == "android.uid.system") "com.android.settings"
+                else "@null"
+
             }
         }
 

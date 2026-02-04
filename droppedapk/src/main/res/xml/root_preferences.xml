@@ -39,18 +39,6 @@
     <androidx.preference.PreferenceCategory
         android:title="@string/pref_category_mods_title">
 
-        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
-            android:key="@string/pref_key_internal_dex"
-            android:icon="@drawable/ic_cast"
-            android:title="@string/internal_dex_screen_title"
-            android:summary="@string/internal_dex_screen_subtitle" />
-
-        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
-            android:key="@string/pref_key_multiuser"
-            android:icon="@drawable/ic_supervisor_account"
-            android:title="@string/multiuser_title"
-            android:summary="@string/multiuser_subtitle" />
-
         <androidx.preference.Preference
             android:key="@string/pref_key_debug_app_list"
             android:icon="@drawable/ic_bug_report"
@@ -70,10 +58,28 @@
             android:summary="@string/inject_shared_uid_keyset_subtitle" />
 
         <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_internal_dex"
+            android:icon="@drawable/ic_cast"
+            android:title="@string/internal_dex_screen_title"
+            android:summary="@string/internal_dex_screen_subtitle" />
+
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_multiuser"
+            android:icon="@drawable/ic_supervisor_account"
+            android:title="@string/multiuser_title"
+            android:summary="@string/multiuser_subtitle" />
+
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_documents_provider"
             android:icon="@drawable/ic_folder_supervised"
             android:title="@string/documents_provider_title"
             android:summary="@string/documents_provider_subtitle" />
+
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_shizuku_autostart"
+            android:icon="@drawable/ic_rocket_launch"
+            android:title="@string/shizuku_autostart_title"
+            android:summary="@string/shizuku_autostart_subtitle" />
 
     </androidx.preference.PreferenceCategory>
 

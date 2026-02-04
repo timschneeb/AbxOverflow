@@ -1,30 +1,6 @@
-## app_process wrapping/injection
-    // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
-    // Could implement code injection and Xposed-like functionality here for apps
-    https://developer.android.com/ndk/guides/wrap-script.html
-    https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
-
-## Trust user certificates
-* Modify manifest to add android:networkSecurityConfig pointing to custom XML
-* Needs resource overlay to add XML file to res/xml (check if possible)
-
-## Launch trampoline
-* Apps without running processes (e.g com.android.shell) cannot be launched from the home screen.
-* Add trampoline home activity
-
 ## Reflection Explorer
 * Allow text input of class to get a list of static methods/fields
 * Implement search algorithm for static methods/fields
-
-## Other ideas
-* Option to start ADB over TCP
-* UI toggle for shizuku autostart
-* JVMTI agent can be attached to system_server. Other apps need to be debuggable.
-* selinux parser to find interesting Samsung OEM modifications from CIL
-* PackageManagerServiceUtils
-  * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
-* InstallPackageHelper
-  * assertOverlayIsValid
 
 ## Kernel parameters
 * sysfs/procfs
@@ -52,6 +28,24 @@
       gameSDK sub mode 2 mode (idx=12)
       gameSDK sub mode 3 mode (idx=13)
   ```
+
+## Trust user certificates
+* Modify manifest to add android:networkSecurityConfig pointing to custom XML
+* Needs resource overlay to add XML file to res/xml (check if possible)
+
+## Other ideas
+* JVMTI agent can be attached to system_server. Other apps need to be debuggable.
+* selinux parser to find interesting Samsung OEM modifications from CIL
+* PackageManagerServiceUtils
+  * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
+* InstallPackageHelper
+  * assertOverlayIsValid
+
+## app_process wrapping/injection
+    // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
+    // Could implement code injection and Xposed-like functionality here for apps
+    https://developer.android.com/ndk/guides/wrap-script.html
+    https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
 
 ## System stuff to hook into for monitoring (low priority)
 * BroadcastHistory: monitor broadcasts

@@ -78,6 +78,8 @@
     <string name="app_data_export">Export</string>
     <string name="app_data_transfer_title">App data transfer</string>
     <string name="app_data_transfer_subtitle">Backup/restore private app data of run-as/debuggable apps</string>
+    <string name="shizuku_autostart_title">Auto-start Shizuku on boot</string>
+    <string name="shizuku_autostart_subtitle">Start Shizuku as the current user after boot</string>
     <string name="shizuku_permission_not_granted">Shizuku permission not granted. Try again after granting</string>
     <string name="shizuku_needs_manual_permission">Please grant Shizuku permission manually</string>
     <string name="shizuku_not_active">Shizuku is not active or running with the incorrect execution context. This feature needs the Shizuku daemon to be launched via ADB or Wireless ADB due to SELinux restrictions. You cannot use this app\'s Shizuku starter for this. If this keeps happening, reboot your phone. It usually happens after installing updates to this app. Do you want to open Shizuku now?</string>

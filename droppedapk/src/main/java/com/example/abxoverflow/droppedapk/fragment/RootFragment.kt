@@ -58,6 +58,7 @@ class RootFragment : BasePreferenceFragment() {
     private val multiuserPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_multiuser))!! }
     private val injectSharedUidKeysPref: Preference by lazy { findPreference(getString(R.string.pref_key_inject_shared_uid_keyset))!! }
     private val documentsProviderPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_documents_provider))!! }
+    private val shizukuAutostartPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_shizuku_autostart))!! }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -80,6 +81,23 @@ class RootFragment : BasePreferenceFragment() {
         shizukuPref.setOnPreferenceClickListener {
             Mods.startShizuku(requireContext())
             refreshShizukuPref()
+            true
+        }
+
+        // Toggle auto-start receiver for Shizuku (SystemAppBootReceiver)
+        shizukuAutostartPref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, value ->
+            try {
+                val enabled = value as Boolean
+                val pm = requireContext().packageManager
+                val comp = ComponentName(requireContext(), "com.example.abxoverflow.droppedapk.receiver.SystemAppBootReceiver")
+                val newState = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                pm.setComponentEnabledSetting(comp, newState, PackageManager.DONT_KILL_APP)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to toggle SystemAppBootReceiver", e)
+                requireContext().showAlert(e)
+            }
+
+            refreshShizukuAutostartPref()
             true
         }
 
@@ -257,6 +275,7 @@ class RootFragment : BasePreferenceFragment() {
 
         refreshInfo()
         refreshShizukuPref()
+        refreshShizukuAutostartPref()
         refreshDexPref()
         refreshMultiuserPref()
         refreshDocumentsProviderPref()
@@ -289,6 +308,7 @@ class RootFragment : BasePreferenceFragment() {
     override fun onResume() {
         super.onResume()
         refreshShizukuPref()
+        refreshShizukuAutostartPref()
         refreshDexPref()
         refreshInfo()
         refreshMultiuserPref()
@@ -390,6 +410,22 @@ class RootFragment : BasePreferenceFragment() {
                 isEnabled = false
                 isChecked = false
                 Log.e(TAG, "refreshDocumentsProviderPref: ", e)
+            }
+        }
+    }
+
+    private fun refreshShizukuAutostartPref() {
+        shizukuAutostartPref.apply {
+            try {
+                val comp = ComponentName(requireContext(), "com.example.abxoverflow.droppedapk.receiver.SystemAppBootReceiver")
+                val state = requireContext().packageManager.getComponentEnabledSetting(comp)
+                isChecked = state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                isEnabled = true
+            } catch (e: Exception) {
+                summary = e.message
+                isEnabled = false
+                isChecked = false
+                Log.e(TAG, "refreshShizukuAutostartPref: ", e)
             }
         }
     }

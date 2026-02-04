@@ -13,4 +13,5 @@
     <string name="pref_key_inject_shared_uid_keyset" translatable="false">pref_key_inject_shared_uid_keyset</string>
     <string name="pref_key_documents_provider" translatable="false">pref_key_documents_provider</string>
     <string name="pref_key_app_data_transfer" translatable="false">pref_key_app_data_transfer</string>
+    <string name="pref_key_shizuku_autostart" translatable="false">pref_key_shizuku_autostart</string>
 </resources>
