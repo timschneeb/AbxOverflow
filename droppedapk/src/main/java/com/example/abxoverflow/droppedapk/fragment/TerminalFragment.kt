@@ -110,6 +110,11 @@ class TerminalFragment : BaseFragment() {
                     onHistoryDown()
                     return@setOnKeyListener true
                 }
+                // Handle physical Enter key so it behaves like the IME Enter (send) and doesn't let focus jump
+                KeyEvent.KEYCODE_ENTER -> {
+                    onSend()
+                    return@setOnKeyListener true
+                }
             }
 
             false
@@ -176,6 +181,9 @@ class TerminalFragment : BaseFragment() {
          historyIndex = -1
 
          binding.terminalInput.setText("")
+        // Keep input focused (physical keyboard should keep typing in the input)
+        binding.terminalInput.requestFocus()
+        binding.terminalInput.setSelection(binding.terminalInput.text?.length ?: 0)
         printInput(cmd)
 
         // Choose shell implementation: internal for system_server or for builtins, otherwise sh -c in cwd.
@@ -250,7 +258,12 @@ class TerminalFragment : BaseFragment() {
         activity?.runOnUiThread {
             binding.terminalOutput.append(s)
             // scroll to bottom
-            binding.terminalScroll.post { binding.terminalScroll.fullScroll(View.FOCUS_DOWN) }
+            binding.terminalScroll.post {
+                binding.terminalScroll.fullScroll(View.FOCUS_DOWN)
+                // After scrolling, ensure the input keeps focus so physical keyboard stays on the input
+                binding.terminalInput.requestFocus()
+                binding.terminalInput.setSelection(binding.terminalInput.text?.length ?: 0)
+            }
         }
     }
 

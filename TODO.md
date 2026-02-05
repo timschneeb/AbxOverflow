@@ -1,11 +1,7 @@
-## Reflection Explorer
-* Allow text input of class to get a list of static methods/fields
-* Implement search algorithm for static methods/fields
-
 ## Kernel parameters
 * sysfs/procfs
-  * /sys/class/backlight/panel/brightness can be overclocked
-  * /sys/class/power_supply/battery/batt_misc_event; override wireless charging pad authentication
+  * /sys/class/backlight/panel/brightness can be overclocked (dangerous in long-term?)
+  * /sys/class/power_supply/battery/batt_misc_event; override wireless charging pad authentication for high speed charging
   * /sys/class/sec/switch/: UART/USB stuff
   * /sys/devices/system/cpu/cpu0/cpufreq/scaling_{min|max}_freq
   * /sys/kernel/gpu/gpu_{min_clock|max_clock|governor}
@@ -40,6 +36,9 @@
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
 * InstallPackageHelper
   * assertOverlayIsValid
+
+## Reflection Explorer
+* Implement search algorithm for static methods/fields
 
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
