@@ -79,9 +79,9 @@ object Mods {
                 delegateInstance = Proxy.newProxyInstance(
                     svcLoader, arrayOf<Class<*>?>(delegateCls)
                 ) { proxy: Any?, method: Method?, args: Array<Any?>? ->
-                    if (method!!.name == "checkPermission" && !(args!![0] as String).startsWith(
-                            "me.timschneeberger.unrestricted."
-                        )
+                    if (method!!.name == "checkPermission" && !(args!![0] as String).let {
+                        it != "com.android.shell" && it != "moe.shizuku.privileged.api"
+                        }
                     ) {
                         // Forward to TriFunction.apply(Object, Object, Integer)
                         // -> Default code path for other apps
@@ -102,6 +102,7 @@ object Mods {
                     }
                     val uidWhitelist: MutableList<Int?> = ArrayList()
                     uidWhitelist.add(1000) // TODO
+                    uidWhitelist.add(1001) // Required for Shizuku on 1001
 
                     if (method.name == "checkUidPermission" && !uidWhitelist.contains(
                             args!![0] as Int

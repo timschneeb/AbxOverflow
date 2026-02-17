@@ -2,11 +2,8 @@
 * sysfs/procfs
   * /sys/class/backlight/panel/brightness can be overclocked (dangerous in long-term?)
   * /sys/class/power_supply/battery/batt_misc_event; override wireless charging pad authentication for high speed charging
-  * /sys/class/sec/switch/: UART/USB stuff
   * /sys/devices/system/cpu/cpu0/cpufreq/scaling_{min|max}_freq
   * /sys/kernel/gpu/gpu_{min_clock|max_clock|governor}
-  * /proc/fslog
-  * /proc/avc_msg
   * /sys/kernel/ems/emstune/req_mode
   ```
       >> normal mode (idx=0)
@@ -25,30 +22,56 @@
       gameSDK sub mode 3 mode (idx=13)
   ```
 
+  
+      2 /sys/devices/system/cpu/cpu1/online
+      2 /sys/devices/system/cpu/cpu2/online
+      2 /sys/devices/system/cpu/cpu3/online
+      2 /sys/devices/system/cpu/cpu4/online
+      2 /sys/devices/system/cpu/cpu5/online
+      2 /sys/devices/system/cpu/cpu6/online
+      2 /sys/devices/system/cpu/cpu7/online
+      2 /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq
+      2 /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq
+      2 /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq
+      2 /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq
+      2 /sys/devices/system/cpu/cpufreq/policy7/scaling_max_freq
+      2 /sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq
+
+    # EMS interfaces
+    chown system system /sys/kernel/ems/emstune/req_mode
+    chown system system /sys/kernel/ems/emstune/req_cam_sub_mode
+    chown system system /sys/kernel/ems/emstune/req_gsdk_sub_mode
+    chown system system /sys/kernel/ems/emstune/req_mode_level
+    chown system system /sys/kernel/ems/emstune/aio_tuner
+    chown system system /sys/kernel/ems/ecs/req_cpus
+
+
+## Add sharedUserIds for other system groups
+* Possible issue: untrusted_app selinux label
+
 ## Trust user certificates
 * Modify manifest to add android:networkSecurityConfig pointing to custom XML
-* Needs resource overlay to add XML file to res/xml (check if possible)
+* Needs resource overlay to add XML file to res/xml (not possible with fabricated overlays)
 
 ## Other ideas
 * JVMTI agent can be attached to system_server. Other apps need to be debuggable.
-* selinux parser to find interesting Samsung OEM modifications from CIL
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
-* InstallPackageHelper
-  * assertOverlayIsValid
+* assertOverlayIsValid
+  Use Samsung-specific check to circumvent signature checks persistingly over reboots.
 
-## Reflection Explorer
-* Implement search algorithm for static methods/fields
+      boolean z = true;
+      if (androidPackage.getPackageName().startsWith("com.samsung.themedesigner")) {
+        synchronized (this.mPm.mLock) {
+          packageLPr4 = this.mPm.mSettings.getPackageLPr(androidPackage.getPackageName());
+        }
+        z = true ^ (packageLPr4 != null && SemSamsungThemeUtils.isValidThemeParkOverlay(androidPackage, packageLPr4.getLastUpdateTime()));
+        Slog.i("PackageManager", "assertOverlayIsValid overlayPkgSetting " + packageLPr4 + " " + z);
+      }
+  isValidThemeParkOverlay(String pkg, long updateTime) -> checks for (empty) file at /data/overlays/themepark/{pkg}/{updateTime}. {pkg} directory must only contain the key file.
 
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
     // Could implement code injection and Xposed-like functionality here for apps
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
-
-## System stuff to hook into for monitoring (low priority)
-* BroadcastHistory: monitor broadcasts
-* ActivityInterceptorCallback: intercept activity launches
-* SettingsService (for internal settings read/write)
-* ProxyTransactListener or BinderInternal.Observer: client/server-side binder IPC monitoring
-  https://cs.android.com/android/platform/superproject/+/android-latest-release:external/cronet/stable/base/android/java/src/org/chromium/base/BinderCallsListener.java?q=setProxyTransactListener&ss=android%2Fplatform%2Fsuperproject

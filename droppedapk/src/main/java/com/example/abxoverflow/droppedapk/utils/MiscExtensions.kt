@@ -30,7 +30,7 @@ val isSystemUid: Boolean
     get() = Process.myUid() == 1000
 
 val Context.canEditPersistProperties: Boolean
-get() = (isSystemUid || packageSeInfo.contains("privapp")) && !seInfo.contains(":shell:")
+get() = (isSystemUid || packageSeInfo.contains("privapp")) && Process.myUid() < 2000
 
 val Context.packageSeInfo: String
     get() = runCatching {

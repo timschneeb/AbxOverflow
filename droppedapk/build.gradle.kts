@@ -53,7 +53,15 @@ android {
                 // TODO
                 manifestPlaceholders["DEFAULT_PROCESS"] = if (name == "android.uid.systemui") "com.android.systemui"
                 else if (name == "android.uid.shell") "com.android.shell"
-                else if (name.startsWith("android.uid.")) name.removePrefix("android.uid.")
+                else if (name == "android.uid.system") "system"
+                else if (name == "android.uid.phone") "com.android.phone"
+                else if (name == "android.uid.cmhservice") "com.samsung.cmh"
+                else if (name.contains(".uid.")) {
+                    // For other Android system UIDs, you need to determine an existing process name that runs under that shared UID.
+                    // Use the package name for a system app that runs under that shared UID in that case.
+                    project.logger.warn("Shared UID '$name' has no known default process assigned")
+                    name
+                }
                 else name
 
                 manifestPlaceholders["SHIZUKU_PROCESS"] = if (name == "android.uid.system") "com.android.settings"
