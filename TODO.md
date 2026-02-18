@@ -49,6 +49,8 @@
 * Possible issue: untrusted_app selinux label
 
 ## Other ideas
+* Add UI for system-wide permission check skipping
+* Add FabricateOverlay shortcut
 * JVMTI agent can be attached to system_server. Other apps need to be debuggable.
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.

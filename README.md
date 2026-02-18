@@ -1,13 +1,22 @@
 Fork changes:
 
 * branch `main`
-   * Disables Android permission checking system-wide (for hardcoded packages and UIDs)
+   * Make any app debuggable temporarily
+   * Disable certificate pinning
+   * Access private app data
+   * Disable Android permission checking system-wide (for hardcoded packages and UIDs)
+   * Launches [my Shizuku fork (with system user support)](https://github.com/timschneeb/Shizuku-SystemUID) as the system app on start up
    * Integrated Java reflection browser UI to explore and modify system service internals
+   * Edit resources for any app on the fly using [my FabricateOverlay fork](https://github.com/timschneeb/FabricateOverlay)
    * Start/stop Samsung DEX on an internal screen (can be connected to using `scrcpy --display-id=2`)
+   * Seamlessly switch between system processes that have different SELinux contexts (system_server, com.android.settings, etc.)
+   * Inject signatures for any other shared UIDs (allows to install this app into SystemUI, phone process, bluetooth process, etc.)
+   * Change installation sources (circumvent Play Store's sideload checks)
+   * Toggle multi-user support (Samsung only)
+   * Expose system files to regular apps using a DocumentsProvider
    * Simple integrated shell
 * branch `shizuku-launcher`
    * Runs as hidden system app on Samsung devices instead of system-server
-   * Launches [my Shizuku fork (with system user support)](https://github.com/timschneeb/Shizuku-SystemUID) as the system app on start up
    * Simple integrated shell
 __________
 

@@ -2,6 +2,7 @@ package com.example.abxoverflow.droppedapk.fragment
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -35,6 +36,10 @@ abstract class BaseAppListFragment : Fragment() {
     private val loader = Executors.newSingleThreadExecutor()
     private var pkgsLoaded = false
 
+    // New filter mode for menu
+    enum class FilterMode { ALL, SYSTEM, USER }
+    private var currentFilter: FilterMode = FilterMode.ALL
+
     abstract fun shouldShowPackage(info: PackageInfo): Boolean
 
     abstract fun queryPackageStatus(pkgName: String): String
@@ -60,11 +65,12 @@ abstract class BaseAppListFragment : Fragment() {
             val pm = requireContext().packageManager
             val list = pm.getInstalledPackages(0)
                 .filter { shouldShowPackage(it) }
-                .mapNotNull {
+                .mapNotNull { pkgInfo ->
                     try {
-                        val ai = it.applicationInfo ?: return@mapNotNull null
+                        val ai = pkgInfo.applicationInfo ?: return@mapNotNull null
                         val label = pm.getApplicationLabel(ai).toString()
-                        it.packageName to label
+                        val isSystem = (ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                        Triple(pkgInfo.packageName, label, isSystem)
                     } catch (_: PackageManager.NameNotFoundException) { null }
                 }
                 .sortedBy { it.second.lowercase(Locale.getDefault()) }
@@ -72,9 +78,10 @@ abstract class BaseAppListFragment : Fragment() {
             activity?.runOnUiThread {
                 binding.recycler.apply {
                     layoutManager = LinearLayoutManager(requireContext())
-                    adapter = PackageAdapter(requireContext(), list.toMutableList()).also {
-                        this@BaseAppListFragment.adapter = it
-                    }
+                    adapter = PackageAdapter(requireContext(), list.map { it.first to it.second }.toMutableList(), list.map { it.third })
+                        .also {
+                            this@BaseAppListFragment.adapter = it
+                        }
                     addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
                     visibility = View.VISIBLE
                 }
@@ -100,7 +107,17 @@ abstract class BaseAppListFragment : Fragment() {
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return false
+                currentFilter = when (menuItem.itemId) {
+                    R.id.filter_all -> FilterMode.ALL
+                    R.id.filter_system -> FilterMode.SYSTEM
+                    R.id.filter_user -> FilterMode.USER
+                    else -> return false
+                }
+                // update checked state in menu
+                menuItem.isChecked = true
+                // apply filter to adapter (adapter will need system flags)
+                if (pkgsLoaded) adapter.applyFilterMode(currentFilter)
+                return true
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
@@ -112,8 +129,9 @@ abstract class BaseAppListFragment : Fragment() {
 
     protected class VH(val binding: ItemAppBinding) : RecyclerView.ViewHolder(binding.root)
 
-    protected inner class PackageAdapter(val ctx: Context, val data: MutableList<Pair<String, String>>) : RecyclerView.Adapter<VH>(), Filterable {
+    protected inner class PackageAdapter(val ctx: Context, val data: MutableList<Pair<String, String>>, val isSystemFlags: List<Boolean>) : RecyclerView.Adapter<VH>(), Filterable {
         private val full = ArrayList<Pair<String, String>>(data)
+        private val fullFlags = ArrayList<Boolean>(isSystemFlags)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
             ItemAppBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -200,6 +218,22 @@ abstract class BaseAppListFragment : Fragment() {
                 full.removeIf { it.first == key }
                 notifyItemRemoved(index)
             }
+        }
+
+        // Apply filter mode (ALL/SYSTEM/USER) by rebuilding data from full + flags
+        @SuppressLint("NotifyDataSetChanged")
+        fun applyFilterMode(mode: FilterMode) {
+            data.clear()
+            for (i in full.indices) {
+                val pair = full[i]
+                val isSystem = fullFlags.getOrNull(i) ?: false
+                when (mode) {
+                    FilterMode.ALL -> data.add(pair)
+                    FilterMode.SYSTEM -> if (isSystem) data.add(pair)
+                    FilterMode.USER -> if (!isSystem) data.add(pair)
+                }
+            }
+            notifyDataSetChanged()
         }
     }
 }

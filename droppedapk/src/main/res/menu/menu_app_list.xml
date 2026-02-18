@@ -7,4 +7,20 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         android:icon="@drawable/ic_search"
         app:showAsAction="ifRoom|collapseActionView" />
+
+    <group android:id="@+id/group_filter" android:checkableBehavior="single">
+        <item
+            android:id="@+id/filter_all"
+            android:title="@string/app_filter_all"
+            android:checked="true"
+            app:showAsAction="never"/>
+        <item
+            android:id="@+id/filter_system"
+            android:title="@string/app_filter_system_only"
+            app:showAsAction="never"/>
+        <item
+            android:id="@+id/filter_user"
+            android:title="@string/app_filter_user_only"
+            app:showAsAction="never"/>
+    </group>
 </menu>

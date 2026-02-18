@@ -94,5 +94,8 @@
 
     <string name="cert_pinning_title">Disable certificate pinning</string>
     <string name="cert_pinning_subtitle">Forces apps to accept untrusted certificates from the user store. Does not persist after a reboot</string>
+    <string name="app_filter_all">All</string>
+    <string name="app_filter_system_only">System only</string>
+    <string name="app_filter_user_only">User only</string>
 
 </resources>
