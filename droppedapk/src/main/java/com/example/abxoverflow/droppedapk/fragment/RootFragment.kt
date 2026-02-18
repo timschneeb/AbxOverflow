@@ -51,6 +51,7 @@ class RootFragment : BasePreferenceFragment() {
     private val dexPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_internal_dex))!! }
     private val switchPref: Preference by lazy { findPreference(getString(R.string.pref_key_switch_process))!! }
     private val systemListPref: Preference by lazy { findPreference(getString(R.string.pref_key_debug_app_list))!! }
+    private val certPinningPref: Preference by lazy { findPreference(getString(R.string.pref_key_cert_pinning))!! }
     private val appDataTransferPref: Preference by lazy { findPreference(getString(R.string.pref_key_app_data_transfer))!! }
     private val installSourcePref: Preference by lazy { findPreference(getString(R.string.pref_key_install_source))!! }
     private val infoPref: Preference by lazy { findPreference(getString(R.string.pref_key_info))!! }
@@ -155,6 +156,24 @@ class RootFragment : BasePreferenceFragment() {
                 isEnabled = false
             } else {
                 summary = getString(R.string.debug_app_list_subtitle)
+                isEnabled = true
+            }
+        }
+
+        certPinningPref.apply {
+            setOnPreferenceClickListener {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.container, CertPinningAppListFragment())
+                    .addToBackStack("cert_pinning")
+                    .commit()
+                true
+            }
+
+            if (!isSystemServer) {
+                summary = getString(R.string.system_server_only_feature)
+                isEnabled = false
+            } else {
+                summary = getString(R.string.cert_pinning_subtitle)
                 isEnabled = true
             }
         }

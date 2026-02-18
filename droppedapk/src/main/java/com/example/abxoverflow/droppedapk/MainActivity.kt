@@ -17,6 +17,7 @@ import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Compan
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_INTENT
 import com.example.abxoverflow.droppedapk.SystemProcessTrampolineActivity.Companion.EXTRA_TARGET_UID
 import com.example.abxoverflow.droppedapk.databinding.ActivityMainBinding
+import com.example.abxoverflow.droppedapk.fragment.CertPinningAppListFragment
 import com.example.abxoverflow.droppedapk.fragment.DebugAppListFragment
 import com.example.abxoverflow.droppedapk.fragment.InstallSourceAppListFragment
 import com.example.abxoverflow.droppedapk.fragment.RootFragment
@@ -86,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         val title = when (frag) {
             is TerminalFragment -> getString(R.string.shell_terminal)
             is DebugAppListFragment -> getString(R.string.debug_app_list_title)
+            is CertPinningAppListFragment -> getString(R.string.cert_pinning_title)
             is InstallSourceAppListFragment -> getString(R.string.install_source_title)
             else -> "${getString(R.string.app_name)} ($currentProcessName)"
         }

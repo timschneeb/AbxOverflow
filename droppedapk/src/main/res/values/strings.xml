@@ -78,6 +78,10 @@
     <string name="app_data_export">Export</string>
     <string name="app_data_transfer_title">App data transfer</string>
     <string name="app_data_transfer_subtitle">Backup/restore private app data of run-as/debuggable apps</string>
+    <string name="no_data_backup_found">No data backup found for %1$s in %2$s/%3$s</string>
+    <string name="app_data_transfer_app_missing">Required app not installed. See https://github.com/timschneeb/debuggable-app-data-backup</string>
+    <string name="app_data_loading_list">Loading run-as/debuggable apps…</string>
+
     <string name="shizuku_autostart_title">Auto-start Shizuku on boot</string>
     <string name="shizuku_autostart_subtitle">Start Shizuku as the current user after boot</string>
     <string name="shizuku_permission_not_granted">Shizuku permission not granted. Try again after granting</string>
@@ -87,8 +91,8 @@
     <string name="shizuku_wrong_environment">Shizuku is not active or running with the incorrect execution context. This feature needs the Shizuku daemon to be launched via ADB or Wireless ADB due to SELinux restrictions. You cannot use this app\'s Shizuku starter for this. Do you want to open Shizuku now?</string>
     <string name="warnings">Warnings</string>
     <string name="shizuku_shell_warnings">Some warnings were printed while exporting app data:\n%1$s</string>
-    <string name="no_data_backup_found">No data backup found for %1$s in %2$s/%3$s</string>
-    <string name="app_data_transfer_app_missing">Required app not installed. See https://github.com/timschneeb/debuggable-app-data-backup</string>
-    <string name="app_data_loading_list">Loading run-as/debuggable apps...</string>
+
+    <string name="cert_pinning_title">Disable certificate pinning</string>
+    <string name="cert_pinning_subtitle">Forces apps to accept untrusted certificates from the user store. Does not persist after a reboot</string>
 
 </resources>

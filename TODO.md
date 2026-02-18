@@ -45,30 +45,13 @@
     chown system system /sys/kernel/ems/emstune/aio_tuner
     chown system system /sys/kernel/ems/ecs/req_cpus
 
-
 ## Add sharedUserIds for other system groups
 * Possible issue: untrusted_app selinux label
-
-## Trust user certificates
-* Modify manifest to add android:networkSecurityConfig pointing to custom XML
-* Needs resource overlay to add XML file to res/xml (not possible with fabricated overlays)
 
 ## Other ideas
 * JVMTI agent can be attached to system_server. Other apps need to be debuggable.
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
-* assertOverlayIsValid
-  Use Samsung-specific check to circumvent signature checks persistingly over reboots.
-
-      boolean z = true;
-      if (androidPackage.getPackageName().startsWith("com.samsung.themedesigner")) {
-        synchronized (this.mPm.mLock) {
-          packageLPr4 = this.mPm.mSettings.getPackageLPr(androidPackage.getPackageName());
-        }
-        z = true ^ (packageLPr4 != null && SemSamsungThemeUtils.isValidThemeParkOverlay(androidPackage, packageLPr4.getLastUpdateTime()));
-        Slog.i("PackageManager", "assertOverlayIsValid overlayPkgSetting " + packageLPr4 + " " + z);
-      }
-  isValidThemeParkOverlay(String pkg, long updateTime) -> checks for (empty) file at /data/overlays/themepark/{pkg}/{updateTime}. {pkg} directory must only contain the key file.
 
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper

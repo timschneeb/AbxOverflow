@@ -24,7 +24,7 @@ class InstallSourceAppListFragment : BaseAppListFragment() {
     private val playStorePackage = "com.android.vending"
 
     @SuppressLint("NotifyDataSetChanged")
-    override fun onAppClicked(target: View, pkg: String) {
+    override fun onAppClicked(target: View, pkg: String, position: Int) {
         context?.let { ctx ->
             ctx.showConfirmDialog(
                 getString(R.string.install_source_change_confirm_title),

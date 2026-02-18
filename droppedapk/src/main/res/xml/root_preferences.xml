@@ -46,6 +46,12 @@
             android:summary="@string/debug_app_list_subtitle" />
 
         <androidx.preference.Preference
+            android:key="@string/pref_key_cert_pinning"
+            android:icon="@drawable/ic_wifi_4_bar_lock"
+            android:title="@string/cert_pinning_title"
+            android:summary="@string/cert_pinning_subtitle" />
+
+        <androidx.preference.Preference
             android:key="@string/pref_key_install_source"
             android:icon="@drawable/ic_shop"
             android:title="@string/install_source_title"

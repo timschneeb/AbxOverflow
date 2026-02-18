@@ -14,16 +14,16 @@ import com.example.abxoverflow.droppedapk.utils.showAlert
  * via reflection into the package manager service. Only available when running in system_server.
  */
 class DebugAppListFragment : BaseAppListFragment() {
-    override fun onAppClicked(target: View, pkg: String) {
+    override fun onAppClicked(target: View, pkg: String, position: Int) {
         context?.let {
             PopupMenu(it, target) .run {
                 gravity = Gravity.END
                 menuInflater.inflate(R.menu.menu_debug_app_actions, menu)
                 setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
-                        R.id.action_off -> applyMode(pkg, DebuggableUtils.PackageMode.OFF)
-                        R.id.action_run_as -> applyMode(pkg, DebuggableUtils.PackageMode.RUN_AS)
-                        R.id.action_debuggable -> applyMode(pkg, DebuggableUtils.PackageMode.DEBUGGABLE)
+                        R.id.action_off -> applyMode(pkg, position, DebuggableUtils.PackageMode.OFF)
+                        R.id.action_run_as -> applyMode(pkg, position, DebuggableUtils.PackageMode.RUN_AS)
+                        R.id.action_debuggable -> applyMode(pkg, position, DebuggableUtils.PackageMode.DEBUGGABLE)
                     }
                     true
                 }
@@ -42,11 +42,11 @@ class DebugAppListFragment : BaseAppListFragment() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    private fun applyMode(pkgName: String, mode: DebuggableUtils.PackageMode) {
+    private fun applyMode(pkgName: String, position: Int, mode: DebuggableUtils.PackageMode) {
         context?.let { ctx ->
             try {
                 DebuggableUtils.setPackageState(pkgName, mode)
-                adapter.notifyDataSetChanged()
+                adapter.notifyItemChanged(position)
             } catch (e: Exception) {
                 ctx.showAlert(e)
             }

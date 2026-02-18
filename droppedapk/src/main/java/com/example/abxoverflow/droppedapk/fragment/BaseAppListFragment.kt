@@ -39,7 +39,7 @@ abstract class BaseAppListFragment : Fragment() {
 
     abstract fun queryPackageStatus(pkgName: String): String
 
-    abstract fun onAppClicked(target: View, pkg: String)
+    abstract fun onAppClicked(target: View, pkg: String, position: Int)
 
     // Child classes may override this to provide per-row tool views (right aligned).
     protected open fun bindToolButtons(holder: VH, pkg: String): List<View>? = null
@@ -163,7 +163,7 @@ abstract class BaseAppListFragment : Fragment() {
             }
 
             holder.itemView.setOnClickListener {
-                onAppClicked(it, pkg)
+                onAppClicked(it, pkg, position)
             }
         }
 
