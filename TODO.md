@@ -48,15 +48,46 @@
 ## Add sharedUserIds for other system groups
 * Possible issue: untrusted_app selinux label
 
+## Debuggable build override
+* Override signatures: https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/util/apk/ApkSignatureVerifier.java;l=101;drc=61197364367c9e404c7da6900658f1b16c42d0da
+https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/java/com/android/server/pm/local/PackageManagerLocalImpl.java;l=100;drc=61197364367c9e404c7da6900658f1b16c42d0da
+
+* Attach JVMTI agents (handleAttachStartupAgents/attemptAttachAgent): https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/app/ActivityThread.java;l=4833;drc=61197364367c9e404c7da6900658f1b16c42d0da;bpv=1;bpt=1?q=IApplicationThread
+      * -> Create small JVMTI agent that starts frida-gadget
+* ActivityManagerService: detect application attach to attach agent
+      * Lock mPids.. object and reassign its sparse array with a custom wrapper class that tracks additions
+      
+              synchronized (mPidsSelfLocked) {
+                mPidsSelfLocked.doAddInternal(pid, app);
+              }
+
+              [...]
+              final PidMap mPidsSelfLocked = new PidMap();
+              static final class PidMap {
+                private final SparseArray<ProcessRecord> mPidMap = new SparseArray<>();
+
+
+* Allow downgrades: https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/java/com/android/server/pm/InstallPackageHelper.java;l=2893;drc=61197364367c9e404c7da6900658f1b16c42d0da
+
+* Disable secure windows: https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java;l=1030;drc=61197364367c9e404c7da6900658f1b16c42d0da;bpv=1;bpt=1
+
+* Settings: show feature flags: https://cs.android.com/android/platform/superproject/main/+/main:packages/apps/Settings/src/com/android/settings/development/featureflags/FeatureFlagsPreferenceController.java;l=33;drc=61197364367c9e404c7da6900658f1b16c42d0da
+
+* Settings: shows compat app settings for all apps (if Build.Debuggable set in settings process)
+  * -> needs system_server patch to allow changing any compat flag: https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/services/core/java/com/android/server/compat/OverrideValidatorImpl.java;l=95;drc=61197364367c9e404c7da6900658f1b16c42d0da?q=isDebuggableBuild
+  
+
 ## Other ideas
 * Add UI for system-wide permission check skipping
 * Add FabricateOverlay shortcut
+* Add Android ID edit
+* Add Device config edits 
 * JVMTI agent can be attached to system_server. Other apps need to be debuggable.
 * PackageManagerServiceUtils
   * comparePackageSignatures: set PkgSetting.signingDetails to SigningDetails.UNKNOWN to skip.
 
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
-    // Could implement code injection and Xposed-like functionality here for apps
+    // Could implement code injection and Xposed-like functionality here for apps (bootstrap frida-gadget?)
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java

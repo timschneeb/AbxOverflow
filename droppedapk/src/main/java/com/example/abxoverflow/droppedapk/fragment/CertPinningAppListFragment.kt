@@ -36,10 +36,9 @@ class CertPinningAppListFragment : BaseAppListFragment() {
     override fun shouldShowPackage(info: PackageInfo) = true
 
     override fun queryPackageStatus(pkgName: String): String = when (getNetworkSecurityState(pkgName)) {
-        NetworkSecurityConfigState.ORIGINAL_UNSET -> ""
-        NetworkSecurityConfigState.ORIGINAL_SET -> "built-in"
         NetworkSecurityConfigState.INJECTED -> "injected"
         NetworkSecurityConfigState.ERROR -> "<error>"
+        else -> ""
     }
 
     @SuppressLint("NotifyDataSetChanged", "RequestInstallPackagesPolicy", "WrongConstant",
