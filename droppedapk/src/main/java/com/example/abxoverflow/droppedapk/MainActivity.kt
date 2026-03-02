@@ -1,15 +1,20 @@
 package com.example.abxoverflow.droppedapk
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
 import android.os.Process
+import android.provider.Settings
 import android.util.Log
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -80,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateActionBarTitle()
+        requestDisableBatteryOptimizationsIfNeeded()
     }
 
     private fun updateActionBarTitle() {
@@ -107,6 +113,28 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         // Remove our activity launcher to avoid leaking this Activity instance into a static field
         ReflectionExplorer.activityLauncher = null
+    }
+
+    /**
+     * Check whether the app is already whitelisted from battery optimizations and, if not,
+     * launch the system dialog to request the user to add the app to the whitelist.
+     */
+    @SuppressLint("BatteryLife")
+    private fun requestDisableBatteryOptimizationsIfNeeded() {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        val isIgnoring = pm.isIgnoringBatteryOptimizations(packageName)
+
+        if (!isIgnoring) {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = "package:$packageName".toUri()
+                }
+                startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                // Fallback to the general battery optimization settings screen
+                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            }
+        }
     }
 
     companion object {

@@ -8,6 +8,7 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- Use android:process to run the app in an existing process running as android.uid.system -->
     <!-- "system" will run as the system_server process with direct access to internal system services via reflection -->
