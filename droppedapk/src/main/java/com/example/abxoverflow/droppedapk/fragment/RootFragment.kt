@@ -60,17 +60,10 @@ class RootFragment : BasePreferenceFragment() {
     private val injectSharedUidKeysPref: Preference by lazy { findPreference(getString(R.string.pref_key_inject_shared_uid_keyset))!! }
     private val documentsProviderPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_documents_provider))!! }
     private val shizukuAutostartPref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_shizuku_autostart))!! }
+    private val spoofDebuggablePref: MaterialSwitchPreference by lazy { findPreference(getString(R.string.pref_key_spoof_debuggable_build))!! }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
-
-        shellPref.setOnPreferenceClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.container, TerminalFragment())
-                .addToBackStack("terminal")
-                .commit()
-            true
-        }
 
         reflPref.setOnPreferenceClickListener {
             Log.e(TAG, "Launching Reflection Explorer into current process")
@@ -82,6 +75,19 @@ class RootFragment : BasePreferenceFragment() {
         shizukuPref.setOnPreferenceClickListener {
             Mods.startShizuku(requireContext())
             refreshShizukuPref()
+            true
+        }
+
+        // Spoof Build.DEBUGGABLE within this process
+        spoofDebuggablePref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, value ->
+            try {
+                Mods.isBuildDebuggable = value as Boolean
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to toggle spoof debuggable build", e)
+                requireContext().showAlert(e)
+            }
+
+            refreshSpoofDebuggablePref()
             true
         }
 
@@ -143,14 +149,6 @@ class RootFragment : BasePreferenceFragment() {
         }
 
         systemListPref.apply {
-            setOnPreferenceClickListener {
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, DebugAppListFragment())
-                    .addToBackStack("system_app_list")
-                    .commit()
-                true
-            }
-
             if (!isSystemServer) {
                 summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
@@ -161,14 +159,6 @@ class RootFragment : BasePreferenceFragment() {
         }
 
         certPinningPref.apply {
-            setOnPreferenceClickListener {
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, CertPinningAppListFragment())
-                    .addToBackStack("cert_pinning")
-                    .commit()
-                true
-            }
-
             if (!isSystemServer) {
                 summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
@@ -179,14 +169,6 @@ class RootFragment : BasePreferenceFragment() {
         }
 
         installSourcePref.apply {
-            setOnPreferenceClickListener {
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.container, InstallSourceAppListFragment())
-                    .addToBackStack("install_source_app_list")
-                    .commit()
-                true
-            }
-
             if (!isSystemServer) {
                 summary = getString(R.string.system_server_only_feature)
                 isEnabled = false
@@ -298,6 +280,7 @@ class RootFragment : BasePreferenceFragment() {
         refreshDexPref()
         refreshMultiuserPref()
         refreshDocumentsProviderPref()
+        refreshSpoofDebuggablePref()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -332,6 +315,30 @@ class RootFragment : BasePreferenceFragment() {
         refreshInfo()
         refreshMultiuserPref()
         refreshDocumentsProviderPref()
+        refreshSpoofDebuggablePref()
+    }
+
+    private fun refreshSpoofDebuggablePref() {
+        try {
+            spoofDebuggablePref.apply {
+                isChecked = Mods.isBuildDebuggable
+                isEnabled = true
+                summary = getString(
+                    if (isSystemServer)
+                        R.string.spoof_debuggable_build_subtitle_system_server
+                    else if (currentProcessName == "com.android.settings")
+                        R.string.spoof_debuggable_build_subtitle_settings
+                    else
+                        R.string.spoof_debuggable_build_subtitle
+                )
+            }
+        } catch (e: Exception) {
+            spoofDebuggablePref.apply {
+                isEnabled = false
+                summary = e.message
+            }
+            Log.e(TAG, "refreshSpoofDebuggablePref: ", e)
+        }
     }
 
     private fun refreshMultiuserPref() {

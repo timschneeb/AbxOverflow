@@ -4,10 +4,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Parcel
 import android.os.ServiceManager
+import android.os.SystemProperties
 import android.util.Log
 import com.example.abxoverflow.droppedapk.utils.readToString
 import com.example.abxoverflow.droppedapk.utils.toast
+import me.timschneeberger.reflectionexplorer.utils.reflection.setField
 import java.io.File
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -80,7 +84,7 @@ object Mods {
                     svcLoader, arrayOf<Class<*>?>(delegateCls)
                 ) { proxy: Any?, method: Method?, args: Array<Any?>? ->
                     if (method!!.name == "checkPermission" && !(args!![0] as String).let {
-                        it != "com.android.shell" && it != "moe.shizuku.privileged.api"
+                            it != "com.android.shell" && it != "moe.shizuku.privileged.api"
                         }
                     ) {
                         // Forward to TriFunction.apply(Object, Object, Integer)
@@ -117,10 +121,10 @@ object Mods {
                         )
                     }
 
-                    Log.i(
-                        TAG,
-                        method.name + "(" + (args?.contentToString() ?: "") + ") called"
-                    )
+                    /* Log.i(
+                         TAG,
+                         method.name + "(" + (args?.contentToString() ?: "") + ") called"
+                     )*/
 
                     val rt = method.returnType
                     if (rt == Boolean::class.javaPrimitiveType) return@newProxyInstance true
@@ -246,4 +250,44 @@ object Mods {
                 throw RuntimeException(e)
             }
         }
+
+    var isBuildDebuggable: Boolean
+        @SuppressLint("DiscouragedPrivateApi")
+        get() = Build::class.java.getDeclaredField("IS_DEBUGGABLE").getBoolean(null)
+        @SuppressLint("DiscouragedPrivateApi")
+        set(enabled) {
+            setField(Build::class.java.getDeclaredField("IS_DEBUGGABLE"), enabled)
+        }
+
+    var isDisplayNativeMode: Boolean
+        get() = SystemProperties.getInt("persist.sys.sf.native_mode", 0) != 0
+        set(enabled) {
+            callSurfaceFlinger(1023) {
+                writeInt(if(enabled) 1 else 0)
+            }
+            SystemProperties.set("persist.sys.sf.native_mode", if(enabled) "1" else "0")
+        }
+
+    var displaySaturation: Float
+        get() = SystemProperties.get("persist.sys.sf.color_saturation", "1.0").toFloatOrNull() ?: 1.0f
+        set(value) {
+            callSurfaceFlinger(1022) {
+                writeFloat(value)
+            }
+            SystemProperties.set("persist.sys.sf.color_saturation", value.toString())
+        }
+
+    fun callSurfaceFlinger(transactionId: Int, writePayload: Parcel.() -> Unit) {
+        val surfaceFlinger = ServiceManager.getService("SurfaceFlinger") ?: return
+
+        val data = Parcel.obtain()
+        try {
+            data.writeInterfaceToken("android.ui.ISurfaceComposer")
+            data.writePayload()
+            // using IBinder.FLAG_ONEWAY: don't need to block for a reply.
+            surfaceFlinger.transact(transactionId, data, null, 1)
+        } finally {
+            data.recycle()
+        }
+    }
 }

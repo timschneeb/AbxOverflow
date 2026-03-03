@@ -98,4 +98,18 @@
     <string name="app_filter_system_only">System only</string>
     <string name="app_filter_user_only">User only</string>
 
+    <string name="spoof_debuggable_build_title">Spoof debuggable build</string>
+    <string name="spoof_debuggable_build_subtitle">Force enable Build.IS_DEBUGGABLE within this process (does not persist)"</string>
+    <string name="spoof_debuggable_build_subtitle_system_server">Allows downgrades, unlocks all compat flags in developer settings"</string>
+    <string name="spoof_debuggable_build_subtitle_settings">Unlocks compat flags for all apps and feature flags in the developer settings"</string>
+
+    <string name="display_saturation_title">Display saturation</string>
+    <string name="display_saturation_subtitle">Change saturation and color mode</string>
+    <string name="display_color_override_native">Native color management</string>
+    <string name="display_color_override_native_subtitle">Use OEM display color settings</string>
+    <string name="display_color_saturation">Saturation level</string>
+
+    <string name="slider_dialog_title">Edit value</string>
+    <string name="slider_dialog_format_error">Invalid number format. Changes not applied.</string>
+    <string name="slider_dialog_step_error">Value must be a multiple of %1$d. Changes not applied.</string>
 </resources>

@@ -6,6 +6,9 @@
     <string name="pref_key_internal_dex" translatable="false">pref_key_internal_dex</string>
     <string name="pref_key_switch_process" translatable="false">pref_key_switch_process</string>
     <string name="pref_key_debug_app_list" translatable="false">pref_key_debug_app_list</string>
+    <string name="pref_key_display_color" translatable="false">pref_key_display_color</string>
+    <string name="pref_key_display_color_native_mode" translatable="false">pref_key_display_color_native_mode</string>
+    <string name="pref_key_display_color_saturation" translatable="false">pref_key_display_color_saturation</string>
     <string name="pref_key_cert_pinning" translatable="false">pref_key_cert_pinning</string>
     <string name="pref_key_install_source" translatable="false">pref_key_install_source</string>
     <string name="pref_key_info" translatable="false">pref_key_info</string>
@@ -15,4 +18,5 @@
     <string name="pref_key_documents_provider" translatable="false">pref_key_documents_provider</string>
     <string name="pref_key_app_data_transfer" translatable="false">pref_key_app_data_transfer</string>
     <string name="pref_key_shizuku_autostart" translatable="false">pref_key_shizuku_autostart</string>
+    <string name="pref_key_spoof_debuggable_build" translatable="false">pref_key_spoof_debuggable_build</string>
 </resources>

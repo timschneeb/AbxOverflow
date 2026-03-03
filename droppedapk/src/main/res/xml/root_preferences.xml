@@ -6,6 +6,7 @@
 
         <androidx.preference.Preference
             android:key="@string/pref_key_shell_run"
+            android:fragment="com.example.abxoverflow.droppedapk.fragment.TerminalFragment"
             android:icon="@drawable/ic_terminal"
             android:title="@string/shell_run_title"
             android:summary="@string/shell_run_subtitle" />
@@ -41,18 +42,21 @@
 
         <androidx.preference.Preference
             android:key="@string/pref_key_debug_app_list"
+            android:fragment="com.example.abxoverflow.droppedapk.fragment.DebugAppListFragment"
             android:icon="@drawable/ic_bug_report"
             android:title="@string/debug_app_list_title"
             android:summary="@string/debug_app_list_subtitle" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_cert_pinning"
+            android:fragment="com.example.abxoverflow.droppedapk.fragment.CertPinningAppListFragment"
             android:icon="@drawable/ic_wifi_4_bar_lock"
             android:title="@string/cert_pinning_title"
             android:summary="@string/cert_pinning_subtitle" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_install_source"
+            android:fragment="com.example.abxoverflow.droppedapk.fragment.InstallSourceAppListFragment"
             android:icon="@drawable/ic_shop"
             android:title="@string/install_source_title"
             android:summary="@string/install_source_subtitle" />
@@ -63,11 +67,24 @@
             android:title="@string/inject_shared_uid_keyset_title"
             android:summary="@string/inject_shared_uid_keyset_subtitle" />
 
+        <androidx.preference.Preference
+            android:key="@string/pref_key_display_color"
+            android:fragment="com.example.abxoverflow.droppedapk.fragment.SaturationFragment"
+            android:icon="@drawable/ic_invert_colors"
+            android:title="@string/display_saturation_title"
+            android:summary="@string/display_saturation_subtitle" />
+
         <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_internal_dex"
             android:icon="@drawable/ic_cast"
             android:title="@string/internal_dex_screen_title"
             android:summary="@string/internal_dex_screen_subtitle" />
+
+        <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
+            android:key="@string/pref_key_spoof_debuggable_build"
+            android:icon="@drawable/ic_bug_report"
+            android:title="@string/spoof_debuggable_build_title"
+            android:summary="@string/spoof_debuggable_build_subtitle" />
 
         <com.example.abxoverflow.droppedapk.preference.MaterialSwitchPreference
             android:key="@string/pref_key_multiuser"
