@@ -16,7 +16,7 @@ import me.timschneeberger.reflectionexplorer.Group
 import me.timschneeberger.reflectionexplorer.Instance
 import me.timschneeberger.reflectionexplorer.ReflectionExplorer
 import me.timschneeberger.reflectionexplorer.utils.cast
-import me.timschneeberger.reflectionexplorer.utils.dex.ParamNames.additionalDexSearchPaths
+import me.timschneeberger.reflectionexplorer.utils.dex.DexLocator.additionalDexSearchPaths
 
 object InstanceProvider : ReflectionExplorer.IInstancesProvider {
     private const val TAG = "DroppedAPK_InstanceProvider"
