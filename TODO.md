@@ -50,28 +50,18 @@ https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base
       * → Create small JVMTI agent that starts frida-gadget
 * ActivityManagerService: detect application attach to attach agent
       * Proxy ActivityManagerService and override attachApplication to detect when apps are launched
-      * Lock mPids.. object and reassign its sparse array with a custom wrapper class that tracks additions
-      
-              synchronized (mPidsSelfLocked) {
-                mPidsSelfLocked.doAddInternal(pid, app);
-              }
-
-              [...]
-              final PidMap mPidsSelfLocked = new PidMap();
-              static final class PidMap {
-                private final SparseArray<ProcessRecord> mPidMap = new SparseArray<>();
-
 
 ## Other ideas
 * Add Android ID edit
 * Add Device config edits 
 * intercept service binders: https://github.com/Chainfire/injectvm-binderjack
-* https://github.com/yuanyang1991/systemserverhooker/blob/master/lib/src/main/java/com/yuanyang/lib/ServiceBinderInterceptor.java
-  * → proxy IWindowSession to override flag secure 
+* https://github.com/yuanyang1991/systemserverhooker/blob/master/lib/src/main/java/com/yuanyang/lib/ServiceBinderInterceptor.java 
   * ContentService tracing/inject → override system settings for certain apps
+* I managed to subclass hidden API classes -> check for useful applications in system_server
 
 ## app_process wrapping/injection
     // If debuggable flag is set, can add wrap.sh to native-lib dir to apply --invoke-with zygote wrapper
     // Could implement code injection and Xposed-like functionality here for apps (bootstrap frida-gadget?)
+    // This is likely redundant with the above JVMTI agent approach
     https://developer.android.com/ndk/guides/wrap-script.html
     https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/com/android/internal/os/WrapperInit.java
