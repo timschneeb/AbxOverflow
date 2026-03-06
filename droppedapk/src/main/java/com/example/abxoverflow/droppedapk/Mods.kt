@@ -9,9 +9,12 @@ import android.os.Parcel
 import android.os.ServiceManager
 import android.os.SystemProperties
 import android.util.Log
+import android.view.SurfaceControl
 import com.example.abxoverflow.droppedapk.utils.injectedPreferences
 import com.example.abxoverflow.droppedapk.utils.readToString
 import com.example.abxoverflow.droppedapk.utils.toast
+import dalvik.system.BaseDexClassLoader
+import io.github.kyuubiran.ezxhelper.core.finder.MethodFinder.`-Static`.methodFinder
 import me.timschneeberger.reflectionexplorer.utils.reflection.setField
 import java.io.File
 import java.lang.reflect.Method
@@ -19,14 +22,58 @@ import java.lang.reflect.Proxy
 import java.util.Objects
 import java.util.function.BiFunction
 
+
 @SuppressLint("PrivateApi")
 object Mods {
+    @SuppressLint("SoonBlockedPrivateApi")
+    private fun testOverride() {
+        setField(SurfaceControl::class.java.getDeclaredField("SECURE"), 0)
+
+
+
+
+        val myLoader = Mods.javaClass.classLoader!! as BaseDexClassLoader
+        Log.e(TAG, "My classloader: " + myLoader)
+
+        BaseDexClassLoader::class.java.methodFinder()
+            .filterByName("addDexPath")
+            .filterByParamTypes(String::class.java)
+            .first()
+            .invoke(myLoader, "/system/framework/services.jar")
+        // TODO: this causes confusion in ReflectionExplorer's static field scanner in non-system_serverbuilds!
+
+        Log.e(TAG, "Added services.jar to classloader: " + myLoader)
+
+        val loaded = myLoader.loadClass("com.android.server.LocalManagerRegistry")
+        Log.e(TAG, "Loaded class: " + loaded)
+
+        com.android.server.LocalManagerRegistry.addManager(Mods::class.java, "Hello!")
+
+        // Instantiate and invoke Test.test() using reflection so selection is done at runtime
+        try {
+            val testClassName = "com.example.abxoverflow.droppedapk.utils.Test"
+            val cls = Class.forName(testClassName)
+            val ctor = cls.getDeclaredConstructor()
+            ctor.isAccessible = true
+            val instance = ctor.newInstance()
+            val method = cls.getMethod("test")
+            method.invoke(instance)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to invoke Test.test() via reflection", e)
+        }
+    }
+
     private const val TAG = "DroppedAPK_Mods"
     private var pkgWhitelist = emptyList<String>()
     private var uidWhitelist = emptyList<Int>()
 
     fun runAllSystemServer() {
         enablePermissionManagerDelegate()
+        try {
+            // TODO testOverride()
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to run test", e)
+        }
     }
 
     /**
@@ -131,10 +178,10 @@ object Mods {
                         )
                     }
 
-                    Log.i(
+                   /* Log.i(
                          TAG,
                          method.name + "(" + (args?.contentToString() ?: "") + ") called"
-                     )
+                     )*/
 
                     val rt = method.returnType
                     if (rt == Boolean::class.javaPrimitiveType) return@newProxyInstance true
