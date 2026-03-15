@@ -1,3 +1,7 @@
+# Migrated to [postexploitation-toolbox-android](https://github.com/timschneeb/postexploitation-toolbox-android)
+
+The fork has diverged significantly and is becoming a detached project.
+_________
 Fork changes:
 
 * branch `main`
